@@ -1,5 +1,6 @@
 import argparse
 import csv
+from datetime import datetime, timezone
 import gzip
 import json
 from pathlib import Path
@@ -10,9 +11,43 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+# ===================== SWITCHES: EDIT HERE =====================
+# All OFF: running this file reads no data and writes no outputs.
+# Change only the sections you want to run to True; save; then run:
+# python prepare_traffic.py
+RUN_PREPARATION = False
+RUN_FILTER_AUDIT = False
+RUN_THRESHOLD_COMPARISON = False
+RUN_STATION_COVERAGE_AUDIT = False
+RUN_FILTERED_SELECTION = False
+
+# ===================== SETTINGS: EDIT HERE =====================
+RAW_DATA_FOLDER = Path('station_5min')
+PREPARED_DATA_FOLDER = Path('traffic_prepared')
+FILTER_REPORT_FOLDER = Path('audit_reports/filter_review')
+STATION_REPORT_FOLDER = Path('audit_reports/station_coverage')
+SELECTION_FOLDER = Path('traffic_essential_40')
+START_DATE = '2026-02-01'
+END_DATE = '2026-05-31'
+SELECTED_LANE_TYPES = ['ML']
+MIN_OBSERVED_PCT = 40
+
+# Existing output folders are protected. To rerun a section, change its
+# output folder above to a new name. Ignore large selection folders in Git.
+# The original preparation's 80% eligibility flag stays unchanged.
+# MIN_OBSERVED_PCT controls the revised selection, not original preparation.
+# Threshold audits always compare 0, 5, 20, 40, 60, 80, 100% for ML.
+# Switching an audit on does NOT switch dataset filtering on.
+# FF can be audited by lane type, but a speed-required selection excludes
+# FF records without speed. Study their suitability before changing rules.
+# No scientific justification for a cutoff is implied by these switches.
+
+# ===================== 1. ORIGINAL PREPARATION =====================
+
+
 # Install once in your virtual environment: python -m pip install pandas pyarrow
-# Run from your project folder: python prepare_traffic.py
-# Or: python prepare_traffic.py --input /path/to/station_5min
+# Enable RUN_PREPARATION above to prepare raw files.
+# Input and output paths are configured at the top.
 # All imports stay at the absolute top. Original compressed files are untouched.
 # Reference: PeMS Station 5-Minute field specification (12 station fields,
 # then five fields per lane). Verify against one actual export before analysis.
@@ -77,16 +112,16 @@ def prepare_chunk(frame, source_name, date, min_observed, congestion_speed):
     return frame
 
 
-def main():
+def run_preparation():
     parser = argparse.ArgumentParser(description='Prepare PeMS compressed station data, one day at a time.')
-    parser.add_argument('--input', type=Path, default=Path('station_5min'))
-    parser.add_argument('--output', type=Path, default=Path('traffic_prepared'))
-    parser.add_argument('--start', default='2026-02-01')
-    parser.add_argument('--end', default='2026-05-31')
+    parser.add_argument('--input', type=Path, default=RAW_DATA_FOLDER)
+    parser.add_argument('--output', type=Path, default=PREPARED_DATA_FOLDER)
+    parser.add_argument('--start', default=START_DATE)
+    parser.add_argument('--end', default=END_DATE)
     parser.add_argument('--chunksize', type=int, default=100000)
     parser.add_argument('--min-observed', type=float, default=80)
     parser.add_argument('--congestion-speed', type=float, default=45)
-    args = parser.parse_args()
+    args = parser.parse_args([])
     if args.chunksize < 1 or not 0 <= args.min_observed <= 100 or not 0 < args.congestion_speed <= 120:
         parser.error('Check chunksize, min-observed, and congestion-speed ranges.')
     expected = pd.date_range(args.start, args.end)
@@ -147,5 +182,267 @@ def main():
 # compare weekdays and rush hours. Station metadata is needed to place
 # detectors along corridors. Do not bridge missing time intervals as events.
 # Read a day for inspection: pd.read_parquet('traffic_prepared/date=2026-02-01')
+
+# ===================== 2. FILTER AND THRESHOLD AUDITS =====================
+FLAGS = [
+    'invalid_timestamp', 'date_mismatch', 'invalid_station_id',
+    'invalid_speed', 'invalid_flow', 'invalid_occupancy',
+    'invalid_observed_pct', 'low_observed', 'off_5min_grid',
+    'duplicate_station_timestamp',
+]
+COLUMNS = ['lane_type', 'observed_pct', 'analysis_eligible'] + FLAGS
+THRESHOLDS = [0, 5, 20, 40, 60, 80, 100]
+
+
+def run_filter_review(args):
+    files = sorted(args.input.glob('date=*/part-*.parquet'))
+    if not files:
+        raise ValueError(f'No prepared Parquet files in {args.input}')
+    if args.reports.exists():
+        raise ValueError('Report directory exists; choose a new --reports path.')
+    if args.write_selection and args.selection_output.exists():
+        raise ValueError('Selection directory exists; choose a new --selection-output path.')
+    args.reports.mkdir(parents=True)
+    if args.write_selection:
+        args.selection_output.mkdir(parents=True)
+    labels = [
+        'All saved rows', 'Selected lane types', 'Valid timestamp and date',
+        'Valid station ID', 'Valid speed', 'No duplicate station/timestamp',
+        f'Valid observation percentage and coverage >={args.min_observed:g}%',
+    ]
+    totals = dict.fromkeys(labels, 0)
+    lane_summary = {}
+    threshold_counts = dict.fromkeys(THRESHOLDS, 0)
+    essential_ml = 0
+    valid_coverage_ml = 0
+    zero_coverage_ml = 0
+    old_eligible = 0
+    intersections = dict.fromkeys(['both', 'new_only', 'old_only', 'neither'], 0)
+    overlap_counts = {}
+    day_reports = {}
+    last_day = None
+    settings = {
+        'created_utc': datetime.now(timezone.utc).isoformat(),
+        'input': str(args.input), 'lane_types': args.lane_types,
+        'minimum_observed_pct': args.min_observed,
+        'required': ['valid timestamp/date', 'valid station ID', 'valid speed',
+                     'no duplicate station/timestamp', 'valid coverage >= cutoff'],
+        'optional': ['valid flow', 'valid occupancy', 'five-minute grid'],
+        'threshold_comparison_scope': 'ML with essential checks',
+        'thresholds': THRESHOLDS, 'write_selection': args.write_selection,
+        'file_count': len(files), 'status': 'running',
+        'notes': ['Sequential exclusions depend on order.',
+                  'Flag totals overlap; do not add them.',
+                  '0% threshold includes zero-observed records.',
+                  'Original analysis_eligible retains original rules.',
+                  'Selected rows receive eligible_essential_selected=True.'],
+    }
+    settings_path = args.reports / 'run_settings.json'
+    settings_path.write_text(json.dumps(settings, indent=2))
+    try:
+        for path in files:
+            day = path.parent.name
+            if day != last_day:
+                print(f'Checking {day}', flush=True)
+                last_day = day
+            df = pd.read_parquet(path, columns=None if args.write_selection else COLUMNS)
+            old = df.analysis_eligible.fillna(False)
+            old_eligible += int(old.sum())
+            for lane, group in df.groupby('lane_type', dropna=False):
+                key = 'MISSING' if pd.isna(lane) else str(lane)
+                counts = lane_summary.setdefault(key, dict.fromkeys(['rows', 'original_eligible', 'zero_observed', 'observed_ge40', 'observed_ge80'] + FLAGS, 0))
+                counts['rows'] += len(group)
+                counts['original_eligible'] += int(group.analysis_eligible.sum())
+                counts['zero_observed'] += int(group.observed_pct.eq(0).sum())
+                counts['observed_ge40'] += int(group.observed_pct.ge(40).sum())
+                counts['observed_ge80'] += int(group.observed_pct.ge(80).sum())
+                for flag in FLAGS:
+                    counts[flag] += int(group[flag].sum())
+            scope = df.lane_type.isin(args.lane_types)
+            essential = (~df.invalid_timestamp & ~df.date_mismatch
+                         & ~df.invalid_station_id & ~df.invalid_speed
+                         & ~df.duplicate_station_timestamp).fillna(False)
+            conditions = [scope, ~df.invalid_timestamp & ~df.date_mismatch,
+                          ~df.invalid_station_id, ~df.invalid_speed,
+                          ~df.duplicate_station_timestamp,
+                          ~df.invalid_observed_pct & df.observed_pct.ge(args.min_observed)]
+            keep = pd.Series(True, index=df.index)
+            totals[labels[0]] += len(df)
+            for label, condition in zip(labels[1:], conditions):
+                keep &= condition.fillna(False)
+                totals[label] += int(keep.sum())
+            ml_essential = df.lane_type.eq('ML').fillna(False) & essential
+            essential_ml += int(ml_essential.sum())
+            coverage = df.loc[ml_essential & ~df.invalid_observed_pct, 'observed_pct']
+            valid_coverage_ml += len(coverage)
+            zero_coverage_ml += int(coverage.eq(0).sum())
+            for cutoff in THRESHOLDS:
+                threshold_counts[cutoff] += int(coverage.ge(cutoff).sum())
+            intersections['both'] += int((old & keep).sum())
+            intersections['new_only'] += int((~old & keep).sum())
+            intersections['old_only'] += int((old & ~keep).sum())
+            intersections['neither'] += int((~old & ~keep).sum())
+            # Exact combinations of existing quality flags within selected scope.
+            patterns = pd.Series(0, index=df.index, dtype='int64')
+            for bit, flag in enumerate(FLAGS):
+                patterns += df[flag].fillna(True).astype('int64') * (1 << bit)
+            for pattern, count in patterns[scope].value_counts().items():
+                overlap_counts[int(pattern)] = overlap_counts.get(int(pattern), 0) + int(count)
+            daily = day_reports.setdefault(day, {'rows': 0, 'original_eligible': 0, 'new_eligible': 0})
+            daily['rows'] += len(df)
+            daily['original_eligible'] += int(old.sum())
+            daily['new_eligible'] += int(keep.sum())
+            if args.write_selection and keep.any():
+                selected = df.loc[keep].copy()
+                selected['eligible_essential_selected'] = True
+                destination = args.selection_output / day
+                destination.mkdir(exist_ok=True)
+                selected.to_parquet(destination / path.name, index=False)
+        audit = pd.DataFrame({'condition': labels, 'rows_remaining': [totals[x] for x in labels]})
+        audit['removed_at_step'] = (audit.rows_remaining.shift(1) - audit.rows_remaining).fillna(0).astype('int64')
+        if RUN_FILTER_AUDIT:
+            audit.to_csv(args.reports / 'sequential_filter_audit.csv', index=False)
+        pd.DataFrame.from_dict(lane_summary, orient='index').rename_axis('lane_type').to_csv(args.reports / 'lane_type_quality.csv')
+        thresholds = pd.DataFrame({'minimum_observed_pct': THRESHOLDS, 'rows_retained': [threshold_counts[t] for t in THRESHOLDS]})
+        thresholds['pct_of_essential_mainline'] = 100 * thresholds.rows_retained / essential_ml if essential_ml else float('nan')
+        if RUN_THRESHOLD_COMPARISON:
+            thresholds.to_csv(args.reports / 'observation_threshold_audit.csv', index=False)
+        pd.DataFrame([{'flag_combination': ';'.join(flag for bit, flag in enumerate(FLAGS) if pattern & (1 << bit)) or 'none', 'rows': count}
+                      for pattern, count in sorted(overlap_counts.items())]).to_csv(args.reports / 'overlapping_flags_in_scope.csv', index=False)
+        pd.DataFrame.from_dict(day_reports, orient='index').rename_axis('date').to_csv(args.reports / 'daily_selection_counts.csv')
+        pd.Series(intersections, name='rows').rename_axis('category').to_csv(args.reports / 'old_vs_new_selection.csv')
+        settings.update(status='complete', total_rows=totals[labels[0]], original_eligible=old_eligible,
+                        new_eligible=totals[labels[-1]], essential_mainline=essential_ml,
+                        valid_coverage_mainline=valid_coverage_ml, zero_coverage_mainline=zero_coverage_ml)
+        print('\nSequential audit:\n' + audit.to_string(index=False))
+        print('\nMainline threshold comparison:\n' + thresholds.round(2).to_string(index=False))
+        print(f'\nExactly 0% observed among essential mainline: {zero_coverage_ml:,}')
+        print(f'Reports saved: {args.reports.resolve()}')
+    except BaseException as error:
+        settings.update(status='incomplete', error=str(error))
+        raise
+    finally:
+        settings_path.write_text(json.dumps(settings, indent=2))
+
+
+# ===================== 3. STATION COVERAGE AUDIT =====================
+def run_station_coverage(args):
+    files = sorted(args.input.glob('date=*/part-*.parquet'))
+    if not files:
+        raise SystemExit('No prepared files found.')
+    if args.output.exists():
+        raise SystemExit('Output exists. Use a new --output directory to preserve prior results.')
+    args.output.mkdir(parents=True)
+    settings = {'status': 'running', 'created_utc': datetime.now(timezone.utc).isoformat(),
+                'input': str(args.input), 'scope': 'All ML rows, before coverage filtering',
+                'notes': ['No stations or measurements are removed.',
+                          'Never observed means never positive observed_pct in the supplied period.',
+                          'Daily rows do not certify complete coverage; missing intervals require a later continuity audit.']}
+    metadata = args.output / 'run_settings.json'
+    metadata.write_text(json.dumps(settings, indent=2))
+    daily_parts = []
+    hour_parts = []
+    columns = ['station_id', 'freeway', 'direction', 'lane_type', 'timestamp',
+               'observed_pct', 'invalid_observed_pct', 'invalid_station_id']
+    last_day = None
+    try:
+        for path in files:
+            day = path.parent.name.removeprefix('date=')
+            if day != last_day:
+                print(f'Checking {day}', flush=True)
+                last_day = day
+            df = pd.read_parquet(path, columns=columns)
+            df = df.loc[df.lane_type.eq('ML') & ~df.invalid_station_id].copy()
+            if df.empty:
+                continue
+            valid = ~df.invalid_observed_pct
+            df['rows'] = 1
+            df['valid_coverage_rows'] = valid.astype('int64')
+            df['zero_rows'] = (valid & df.observed_pct.eq(0)).astype('int64')
+            df['positive_rows'] = (valid & df.observed_pct.gt(0)).astype('int64')
+            df['ge40_rows'] = (valid & df.observed_pct.ge(40)).astype('int64')
+            df['ge80_rows'] = (valid & df.observed_pct.ge(80)).astype('int64')
+            df['observed_sum'] = df.observed_pct.where(valid, 0)
+            df['date'] = day
+            measures = ['rows', 'valid_coverage_rows', 'zero_rows', 'positive_rows',
+                        'ge40_rows', 'ge80_rows', 'observed_sum']
+            keys = ['station_id', 'freeway', 'direction']
+            daily_parts.append(df.groupby(keys + ['date'], dropna=False)[measures].sum())
+            df['hour'] = df.timestamp.dt.hour
+            hour_parts.append(df.groupby(keys + ['hour'], dropna=False)[measures].sum())
+        if not daily_parts:
+            raise ValueError('No mainline rows with valid station IDs found.')
+        daily = pd.concat(daily_parts).groupby(level=[0, 1, 2, 3], dropna=False).sum().reset_index()
+        hourly = pd.concat(hour_parts).groupby(level=[0, 1, 2, 3], dropna=False).sum().reset_index()
+        keys = ['station_id', 'freeway', 'direction']
+        summary = daily.groupby(keys, dropna=False)[measures].sum()
+        days = daily.assign(days_present=1, days_any_observed=daily.positive_rows.gt(0).astype('int64'),
+                            days_any_ge40=daily.ge40_rows.gt(0).astype('int64'),
+                            days_any_ge80=daily.ge80_rows.gt(0).astype('int64'))
+        summary = summary.join(days.groupby(keys, dropna=False)[['days_present', 'days_any_observed', 'days_any_ge40', 'days_any_ge80']].sum())
+        for table in [daily, hourly, summary]:
+            denom = table.valid_coverage_rows.replace(0, float('nan'))
+            table['zero_pct'] = 100 * table.zero_rows / denom
+            table['positive_pct'] = 100 * table.positive_rows / denom
+            table['ge40_pct'] = 100 * table.ge40_rows / denom
+            table['ge80_pct'] = 100 * table.ge80_rows / denom
+            table['mean_observed_pct'] = table.observed_sum / denom
+        summary['coverage_group'] = 'mixed zero and positive'
+        summary.loc[summary.zero_rows.eq(0) & summary.positive_rows.gt(0), 'coverage_group'] = 'positive throughout valid records'
+        summary.loc[summary.positive_rows.eq(0) & summary.valid_coverage_rows.gt(0), 'coverage_group'] = 'never positive observed'
+        summary.loc[summary.valid_coverage_rows.eq(0), 'coverage_group'] = 'no valid coverage values'
+        summary.reset_index().to_csv(args.output / 'station_coverage.csv', index=False)
+        daily.to_csv(args.output / 'station_daily_coverage.csv', index=False)
+        hourly.to_csv(args.output / 'station_hour_coverage.csv', index=False)
+        groups = summary.groupby('coverage_group').agg(station_route_groups=('rows', 'size'), rows=('rows', 'sum'), zero_rows=('zero_rows', 'sum'), positive_rows=('positive_rows', 'sum'))
+        groups.to_csv(args.output / 'coverage_group_summary.csv')
+        dates = daily.groupby('date')[measures].sum()
+        dates.to_csv(args.output / 'daily_network_coverage.csv')
+        print('\nCoverage groups:\n' + groups.to_string())
+        print(f'\nUnique station IDs: {summary.reset_index().station_id.nunique():,}')
+        print(f'Mainline rows audited: {int(summary.rows.sum()):,}')
+        print(f'Zero-coverage rows: {int(summary.zero_rows.sum()):,}')
+        print(f'Reports: {args.output.resolve()}')
+        settings.update(status='complete', mainline_rows=int(summary.rows.sum()), zero_rows=int(summary.zero_rows.sum()),
+                        unique_stations=int(summary.reset_index().station_id.nunique()), source_days=len(dates))
+    except BaseException as error:
+        settings.update(status='incomplete', error=str(error))
+        raise
+    finally:
+        metadata.write_text(json.dumps(settings, indent=2))
+
+
+
+# ===================== 4. RUN ENABLED SECTIONS =====================
+def main():
+    switches = {
+        'Preparation': RUN_PREPARATION,
+        'Filter audit': RUN_FILTER_AUDIT,
+        'Threshold comparison': RUN_THRESHOLD_COMPARISON,
+        'Station coverage audit': RUN_STATION_COVERAGE_AUDIT,
+        'Filtered selection': RUN_FILTERED_SELECTION,
+    }
+    for label, enabled in switches.items():
+        print(f'{label}: {"ON" if enabled else "OFF"}')
+    if not any(switches.values()):
+        print('Nothing enabled. Change a RUN_ switch at the top to True and save.')
+        return
+    if not 0 <= MIN_OBSERVED_PCT <= 100:
+        raise ValueError('MIN_OBSERVED_PCT must be between 0 and 100.')
+    if RUN_PREPARATION:
+        run_preparation()
+    if RUN_FILTER_AUDIT or RUN_THRESHOLD_COMPARISON or RUN_FILTERED_SELECTION:
+        run_filter_review(argparse.Namespace(
+            input=PREPARED_DATA_FOLDER, reports=FILTER_REPORT_FOLDER,
+            selection_output=SELECTION_FOLDER,
+            write_selection=RUN_FILTERED_SELECTION,
+            min_observed=MIN_OBSERVED_PCT, lane_types=SELECTED_LANE_TYPES,
+        ))
+    if RUN_STATION_COVERAGE_AUDIT:
+        run_station_coverage(argparse.Namespace(
+            input=PREPARED_DATA_FOLDER, output=STATION_REPORT_FOLDER,
+        ))
+
+
 if __name__ == '__main__':
     main()

@@ -1,0 +1,3 @@
+coverage_group,station_route_groups,rows,zero_rows,positive_rows
+mixed zero and positive,480,16583040,7181107,9401933
+never positive observed,1436,49610928,49610928,0

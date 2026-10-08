@@ -10,3 +10,7 @@ __pycache__/
 
 # macOS files
 .DS_Store
+
+traffic_prepared_test/
+
+traffic_essential_40/

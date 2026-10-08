@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-08T15:54:20.565006+00:00",
+  "input": "traffic_prepared",
+  "scope": "All ML rows, before coverage filtering",
+  "notes": [
+    "No stations or measurements are removed.",
+    "Never observed means never positive observed_pct in the supplied period.",
+    "Daily rows do not certify complete coverage; missing intervals require a later continuity audit."
+  ],
+  "mainline_rows": 66193968,
+  "zero_rows": 56792035,
+  "unique_stations": 1916,
+  "source_days": 120
+}
