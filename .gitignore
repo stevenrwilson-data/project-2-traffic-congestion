@@ -1,0 +1,12 @@
+
+# Raw traffic data and generated datasets
+station_5min/
+traffic_prepared/
+
+# Python environments and cache
+.venv/
+venv/
+__pycache__/
+
+# macOS files
+.DS_Store
