@@ -1,0 +1,3 @@
+date,stations_present,stations_no_positive,stations_all_valid_zero,rows,zero_rows,positive_rows,ge40_rows,ge80_rows,valid_coverage_rows,stations_absent_from_date,zero_pct_all_rows,positive_pct_all_rows,ge80_pct_all_rows,invalid_coverage_rows,date_available
+2026-02-28,1916,1915,1915,551808,551769,39,12,0,551808,0,99.99293232428671,0.007067675713291579,0.0,0,True
+2026-05-27,1916,1916,1916,551808,551808,0,0,0,551808,0,100.0,0.0,0.0,0,True

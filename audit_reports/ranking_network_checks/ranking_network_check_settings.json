@@ -1,0 +1,23 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T05:15:57.928187+00:00",
+  "inputs": [
+    "audit_reports/station_ranking",
+    "audit_reports/station_coverage"
+  ],
+  "best_primary_days": 118,
+  "stations_with_best_primary_days": 49,
+  "stations_with_best_exact_score": 44,
+  "top_n": 20,
+  "boundary_tie_group_size": 44,
+  "boundary_tie_stations_included": 20,
+  "dates_checked": [
+    "2026-02-28",
+    "2026-05-27"
+  ],
+  "limitations": [
+    "Observed percentages are not independently verified by this check.",
+    "No-positive days do not identify outage causes.",
+    "No cutoff, station selection, or date exclusion is adopted."
+  ]
+}

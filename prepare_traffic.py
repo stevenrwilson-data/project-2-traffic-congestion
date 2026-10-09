@@ -21,7 +21,9 @@ RUN_THRESHOLD_COMPARISON = False
 RUN_STATION_COVERAGE_AUDIT = False
 RUN_FILTERED_SELECTION = False
 RUN_CONTINUITY_AUDIT = False
-RUN_STATION_RANKING = True
+RUN_STATION_RANKING = False
+RUN_TOP_STATION_REVIEW = False
+RUN_RANKING_NETWORK_CHECKS = True
 
 # ===================== SETTINGS: EDIT HERE =====================
 RAW_DATA_FOLDER = Path('station_5min')
@@ -30,6 +32,10 @@ FILTER_REPORT_FOLDER = Path('audit_reports/filter_review')
 STATION_REPORT_FOLDER = Path('audit_reports/station_coverage')
 CONTINUITY_REPORT_FOLDER = Path('audit_reports/continuity')
 RANKING_REPORT_FOLDER = Path('audit_reports/station_ranking')
+TOP_REVIEW_REPORT_FOLDER = Path('audit_reports/top_station_review')
+TOP_STATIONS_TO_REVIEW = 20
+REVIEW_CHECKS_REPORT_FOLDER = Path('audit_reports/ranking_network_checks')
+DATES_TO_CHECK = ['2026-02-28', '2026-05-27']
 SELECTION_FOLDER = Path('traffic_essential_40')
 START_DATE = '2026-02-01'
 END_DATE = '2026-05-31'
@@ -605,7 +611,195 @@ def run_station_ranking():
     print(f'Stations with at least one two-hour positive run: {int(ranking.days_run_ge120min.gt(0).sum()):,}')
     print(f'Saved: {RANKING_REPORT_FOLDER.resolve()}')
 
-# ===================== 6. RUN ENABLED SECTIONS =====================
+
+# ===================== 6. TOP-STATION COVERAGE REVIEW =====================
+def run_top_station_review():
+    """Review saved coverage reports; do not scan or filter traffic measurements.
+
+    Top N is a review convenience, not a final geographic station selection.
+    Percentages use all listed records, including invalid coverage values.
+    No-positive days are not automatically hardware outages. Shared calendar
+    dates identify patterns worth investigating, not a proven common cause.
+    This checks daily totals; it cannot locate within-day or rush-hour gaps.
+    """
+    if TOP_STATIONS_TO_REVIEW < 1:
+        raise ValueError('TOP_STATIONS_TO_REVIEW must be positive.')
+    if TOP_REVIEW_REPORT_FOLDER.exists():
+        raise ValueError('Choose a new TOP_REVIEW_REPORT_FOLDER before rerunning.')
+    # Require completed sources to avoid combining interrupted report files.
+    for folder in [RANKING_REPORT_FOLDER, STATION_REPORT_FOLDER]:
+        settings = json.loads((folder / 'run_settings.json').read_text())
+        if settings.get('status') != 'complete':
+            raise ValueError(f'Source report incomplete: {folder}')
+    ranking = pd.read_csv(RANKING_REPORT_FOLDER / 'station_ranking.csv')
+    daily = pd.read_csv(STATION_REPORT_FOLDER / 'station_daily_coverage.csv')
+    if ranking.station_id.duplicated().any():
+        raise ValueError('Ranking contains duplicate station IDs.')
+    # Use the existing rank order, not an unrecorded new selection rule.
+    candidates = ranking.sort_values('rank').head(TOP_STATIONS_TO_REVIEW).copy()
+    if candidates.empty:
+        raise ValueError('No ranked stations found.')
+    measures = ['rows', 'valid_coverage_rows', 'zero_rows', 'positive_rows',
+                'ge40_rows', 'ge80_rows', 'observed_sum']
+    # Sum route assignments within station-day; do not double-count days when
+    # a station has multiple documented route/direction assignments.
+    daily = daily.loc[daily.station_id.isin(candidates.station_id)]
+    daily = daily.groupby(['station_id', 'date'])[measures].sum().reset_index()
+    totals = daily.groupby('station_id')[measures].sum().reset_index()
+    review = candidates[['rank', 'station_id', 'freeway', 'direction', 'days_present',
+                         'days_run_ge120min', 'rows', 'positive_rows']].merge(
+        totals, on='station_id', suffixes=('_ranking', ''), validate='one_to_one')
+    # Ensure these sources describe the same underlying row counts.
+    if len(review) != len(candidates) or not review.rows.eq(review.rows_ranking).all() or not review.positive_rows.eq(review.positive_rows_ranking).all():
+        raise ValueError('Ranking and daily coverage counts disagree.')
+    for name in ['positive', 'zero', 'ge40', 'ge80']:
+        review[f'{name}_pct_of_all_rows'] = 100 * review[f'{name}_rows'] / review.rows
+    review['invalid_coverage_rows'] = review.rows - review.valid_coverage_rows
+    review['mean_observed_pct_valid_rows'] = review.observed_sum / review.valid_coverage_rows.replace(0, float('nan'))
+    # Keep no-positive days separate from missing days and invalid values.
+    no_positive = daily.loc[daily.positive_rows.eq(0)].copy()
+    no_positive['all_records_valid_zero'] = no_positive.zero_rows.eq(no_positive.rows)
+    date_sets = no_positive.groupby('station_id').date.apply(lambda values: set(values)).to_dict()
+    review['days_no_positive'] = review.station_id.map(lambda station: len(date_sets.get(station, set())))
+    review['no_positive_dates'] = review.station_id.map(lambda station: '; '.join(sorted(date_sets.get(station, set()))))
+    dates_present = daily.groupby('station_id').date.nunique()
+    if not review.station_id.map(dates_present).eq(review.days_present).all():
+        raise ValueError('Source reports disagree on days represented.')
+    # Compare station pairs on dates represented for BOTH stations. A missing
+    # station-day is not silently treated as a zero-observed day.
+    represented = daily.groupby('station_id').date.apply(lambda values: set(values)).to_dict()
+    pairs = []
+    ids = candidates.station_id.tolist()
+    for index, first in enumerate(ids):
+        for second in ids[index + 1:]:
+            common = represented[first] & represented[second]
+            a = date_sets.get(first, set()) & common
+            b = date_sets.get(second, set()) & common
+            pairs.append({'station_a': first, 'station_b': second,
+                          'common_dates_present': len(common),
+                          'shared_no_positive_days': len(a & b),
+                          'either_no_positive_days': len(a | b),
+                          'same_nonempty_no_positive_dates': bool(a) and a == b,
+                          'shared_dates': '; '.join(sorted(a & b))})
+    calendar = no_positive.groupby('date').agg(stations_no_positive=('station_id', 'nunique'),
+                                             stations_all_records_zero=('all_records_valid_zero', 'sum'))
+    # Save the report and methodology; no traffic observations are removed.
+    TOP_REVIEW_REPORT_FOLDER.mkdir(parents=True)
+    review.to_csv(TOP_REVIEW_REPORT_FOLDER / 'top_station_coverage.csv', index=False)
+    no_positive.to_csv(TOP_REVIEW_REPORT_FOLDER / 'no_positive_station_days.csv', index=False)
+    calendar.to_csv(TOP_REVIEW_REPORT_FOLDER / 'shared_no_positive_dates.csv')
+    pd.DataFrame(pairs).to_csv(TOP_REVIEW_REPORT_FOLDER / 'station_pair_date_comparison.csv', index=False)
+    settings = {'status': 'complete', 'created_utc': datetime.now(timezone.utc).isoformat(),
+                'stations_reviewed': len(review), 'top_n_setting': TOP_STATIONS_TO_REVIEW,
+                'inputs': [str(RANKING_REPORT_FOLDER), str(STATION_REPORT_FOLDER)],
+                'percentage_denominator': 'All represented rows',
+                'no_positive_definition': 'No valid observed_pct >0 that day',
+                'limitations': ['Daily totals do not locate within-day gaps.',
+                               'Shared dates do not establish outage causes.',
+                               'No final analysis cutoff or geographic selection.']}
+    (TOP_REVIEW_REPORT_FOLDER / 'run_settings.json').write_text(json.dumps(settings, indent=2))
+    display = ['rank', 'station_id', 'freeway', 'direction', 'positive_pct_of_all_rows',
+               'ge40_pct_of_all_rows', 'ge80_pct_of_all_rows', 'days_no_positive']
+    print('\nTop-station coverage review:\n' + review[display].round(2).to_string(index=False))
+    print('\nDates with no positive coverage among candidates:\n' + (calendar.to_string() if not calendar.empty else 'None'))
+    print(f'\nSaved: {TOP_REVIEW_REPORT_FOLDER.resolve()}')
+
+
+# ===================== 7. CHECK RANKING TIES AND NETWORK COVERAGE =====================
+def run_ranking_network_checks():
+    """Test review concerns using saved reports, without choosing stations.
+
+    Ranking ties are computed using the saved full-precision numerical values.
+    Rounded console output is not used to identify ties. Equal scores do not
+    establish equal reliability. No-positive station-days do not establish
+    hardware failure; missing station-days are reported separately.
+    """
+    if REVIEW_CHECKS_REPORT_FOLDER.exists():
+        raise ValueError('Choose a new REVIEW_CHECKS_REPORT_FOLDER before rerunning.')
+    # An interrupted audit can leave CSVs behind: require completed sources.
+    for folder in [RANKING_REPORT_FOLDER, STATION_REPORT_FOLDER]:
+        status = json.loads((folder / 'run_settings.json').read_text())
+        if status.get('status') != 'complete':
+            raise ValueError(f'Source audit incomplete: {folder}')
+    ranking = pd.read_csv(RANKING_REPORT_FOLDER / 'station_ranking.csv')
+    daily = pd.read_csv(STATION_REPORT_FOLDER / 'station_daily_coverage.csv')
+    if ranking.empty or ranking.station_id.duplicated().any():
+        raise ValueError('Ranking must have one nonempty row per station.')
+
+    # Reconstruct the actual sort fields, including a deterministic station-ID
+    # tie breaker. Group before that tie breaker to reveal equivalent scores.
+    ranking = ranking.sort_values(['days_run_ge120min', 'positive_rows_pct', 'station_id'], ascending=[False, False, True])
+    ties = ranking.groupby(['days_run_ge120min', 'positive_rows_pct'], dropna=False).agg(
+        stations=('station_id', 'size'),
+        station_ids=('station_id', lambda values: '; '.join(str(int(x)) for x in sorted(values))),
+    ).reset_index().sort_values(['days_run_ge120min', 'positive_rows_pct'], ascending=[False, False])
+    best = ranking.iloc[0]
+    best_primary_count = int(ranking.days_run_ge120min.eq(best.days_run_ge120min).sum())
+    best_exact_count = int((ranking.days_run_ge120min.eq(best.days_run_ge120min) & ranking.positive_rows_pct.eq(best.positive_rows_pct)).sum())
+    # Tie at the displayed top-N boundary determines whether an arbitrary
+    # station-ID ordering cuts through a larger group with equivalent scores.
+    boundary = ranking.iloc[min(TOP_STATIONS_TO_REVIEW, len(ranking)) - 1]
+    boundary_group = ranking.loc[ranking.days_run_ge120min.eq(boundary.days_run_ge120min) & ranking.positive_rows_pct.eq(boundary.positive_rows_pct)]
+    boundary_included = int(ranking.head(TOP_STATIONS_TO_REVIEW).station_id.isin(boundary_group.station_id).sum())
+
+    # Aggregate multiple route assignments within each station-day. Keep invalid
+    # coverage distinguishable from valid zero rather than calling both outages.
+    measures = ['rows', 'valid_coverage_rows', 'zero_rows', 'positive_rows', 'ge40_rows', 'ge80_rows']
+    daily = daily.groupby(['station_id', 'date'])[measures].sum().reset_index()
+    station_ids = set(daily.station_id)
+    if station_ids != set(ranking.station_id):
+        raise ValueError('Station identities differ between ranking and coverage reports.')
+    totals = daily.groupby('station_id')[['rows', 'positive_rows']].sum()
+    expected = ranking.set_index('station_id')[['rows', 'positive_rows']].sort_index()
+    if not totals.sort_index().eq(expected).all().all():
+        raise ValueError('Source report row counts disagree.')
+    daily['no_positive'] = daily.positive_rows.eq(0)
+    daily['all_valid_zero'] = daily.zero_rows.eq(daily.rows)
+    # Full calendar summary lets the two requested dates be compared with other
+    # dates; percentages are descriptive and imply no failure cause.
+    network = daily.groupby('date').agg(
+        stations_present=('station_id', 'nunique'),
+        stations_no_positive=('no_positive', 'sum'),
+        stations_all_valid_zero=('all_valid_zero', 'sum'),
+        rows=('rows', 'sum'), zero_rows=('zero_rows', 'sum'),
+        positive_rows=('positive_rows', 'sum'), ge40_rows=('ge40_rows', 'sum'),
+        ge80_rows=('ge80_rows', 'sum'), valid_coverage_rows=('valid_coverage_rows', 'sum'),
+    ).reset_index()
+    network['stations_absent_from_date'] = len(station_ids) - network.stations_present
+    network['zero_pct_all_rows'] = 100 * network.zero_rows / network.rows
+    network['positive_pct_all_rows'] = 100 * network.positive_rows / network.rows
+    network['ge80_pct_all_rows'] = 100 * network.ge80_rows / network.rows
+    network['invalid_coverage_rows'] = network.rows - network.valid_coverage_rows
+    # Left join requested dates so an absent date is shown as absent, not zero.
+    selected_dates = pd.DataFrame({'date': DATES_TO_CHECK}).merge(network, on='date', how='left', validate='one_to_one')
+    selected_dates['date_available'] = selected_dates.stations_present.notna()
+    REVIEW_CHECKS_REPORT_FOLDER.mkdir(parents=True)
+    ties.to_csv(REVIEW_CHECKS_REPORT_FOLDER / 'exact_ranking_score_groups.csv', index=False)
+    network.to_csv(REVIEW_CHECKS_REPORT_FOLDER / 'network_daily_observation_check.csv', index=False)
+    selected_dates.to_csv(REVIEW_CHECKS_REPORT_FOLDER / 'requested_dates_observation_check.csv', index=False)
+    settings = {
+        'status': 'complete', 'created_utc': datetime.now(timezone.utc).isoformat(),
+        'inputs': [str(RANKING_REPORT_FOLDER), str(STATION_REPORT_FOLDER)],
+        'best_primary_days': int(best.days_run_ge120min),
+        'stations_with_best_primary_days': best_primary_count,
+        'stations_with_best_exact_score': best_exact_count,
+        'top_n': TOP_STATIONS_TO_REVIEW,
+        'boundary_tie_group_size': len(boundary_group),
+        'boundary_tie_stations_included': boundary_included,
+        'dates_checked': DATES_TO_CHECK,
+        'limitations': ['Observed percentages are not independently verified by this check.',
+                       'No-positive days do not identify outage causes.',
+                       'No cutoff, station selection, or date exclusion is adopted.'],
+    }
+    (REVIEW_CHECKS_REPORT_FOLDER / 'ranking_network_check_settings.json').write_text(json.dumps(settings, indent=2))
+    print(f'\nStations with the best two-hour-day count ({int(best.days_run_ge120min)}): {best_primary_count}')
+    print(f'Stations tied on BOTH actual ranking score fields at the top: {best_exact_count}')
+    print(f'Tie group at top-{TOP_STATIONS_TO_REVIEW} boundary: {len(boundary_group)} stations; {boundary_included} included')
+    display = ['date', 'date_available', 'stations_present', 'stations_absent_from_date', 'stations_no_positive', 'stations_all_valid_zero', 'zero_pct_all_rows', 'positive_pct_all_rows', 'ge80_pct_all_rows']
+    print('\nRequested-date network check:\n' + selected_dates[display].round(3).to_string(index=False))
+    print(f'\nSaved: {REVIEW_CHECKS_REPORT_FOLDER.resolve()}')
+
+# ===================== 8. RUN ENABLED SECTIONS =====================
 def main():
     switches = {
         'Preparation': RUN_PREPARATION,
@@ -615,6 +809,8 @@ def main():
         'Filtered selection': RUN_FILTERED_SELECTION,
         'Continuity audit': RUN_CONTINUITY_AUDIT,
         'Station ranking': RUN_STATION_RANKING,
+        'Top-station review': RUN_TOP_STATION_REVIEW,
+        'Ranking/network checks': RUN_RANKING_NETWORK_CHECKS,
     }
     for label, enabled in switches.items():
         print(f'{label}: {"ON" if enabled else "OFF"}')
@@ -642,6 +838,12 @@ def main():
 
     if RUN_STATION_RANKING:
         run_station_ranking()
+
+    if RUN_TOP_STATION_REVIEW:
+        run_top_station_review()
+
+    if RUN_RANKING_NETWORK_CHECKS:
+        run_ranking_network_checks()
 
 
 if __name__ == '__main__':
