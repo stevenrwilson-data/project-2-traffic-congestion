@@ -1,0 +1,21 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T04:52:53.684266+00:00",
+  "inputs": [
+    "audit_reports/continuity/station_daily_continuity.csv",
+    "audit_reports/station_coverage/station_coverage.csv"
+  ],
+  "study_days": 120,
+  "stations_ranked": 1916,
+  "ranking_order": [
+    "days_run_ge120min descending",
+    "positive_rows_pct descending",
+    "station_id ascending"
+  ],
+  "limitations": [
+    "Positive is >0%, not validated reliability.",
+    "No rush-hour requirement.",
+    "Daily run resets.",
+    "No final station exclusion or traffic-event detection."
+  ]
+}

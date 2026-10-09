@@ -21,6 +21,7 @@ RUN_THRESHOLD_COMPARISON = False
 RUN_STATION_COVERAGE_AUDIT = False
 RUN_FILTERED_SELECTION = False
 RUN_CONTINUITY_AUDIT = False
+RUN_STATION_RANKING = True
 
 # ===================== SETTINGS: EDIT HERE =====================
 RAW_DATA_FOLDER = Path('station_5min')
@@ -28,6 +29,7 @@ PREPARED_DATA_FOLDER = Path('traffic_prepared')
 FILTER_REPORT_FOLDER = Path('audit_reports/filter_review')
 STATION_REPORT_FOLDER = Path('audit_reports/station_coverage')
 CONTINUITY_REPORT_FOLDER = Path('audit_reports/continuity')
+RANKING_REPORT_FOLDER = Path('audit_reports/station_ranking')
 SELECTION_FOLDER = Path('traffic_essential_40')
 START_DATE = '2026-02-01'
 END_DATE = '2026-05-31'
@@ -62,6 +64,7 @@ LANE_FIELDS = ['samples', 'flow_veh_5min', 'occupancy_fraction', 'speed_mph', 'o
 STRING_COLUMNS = ['timestamp', 'direction', 'lane_type']
 
 
+# Validate widths before parsing so lane fields cannot shift silently.
 def inspect_format(path):
     """Scan widths first so different lane counts do not shift column meanings."""
     widths = set()
@@ -114,6 +117,7 @@ def prepare_chunk(frame, source_name, date, min_observed, congestion_speed):
     return frame
 
 
+# Stream raw archives to daily parts; retain measurements and quality flags.
 def run_preparation():
     parser = argparse.ArgumentParser(description='Prepare PeMS compressed station data, one day at a time.')
     parser.add_argument('--input', type=Path, default=RAW_DATA_FOLDER)
@@ -196,6 +200,8 @@ COLUMNS = ['lane_type', 'observed_pct', 'analysis_eligible'] + FLAGS
 THRESHOLDS = [0, 5, 20, 40, 60, 80, 100]
 
 
+# One shared read pass calculates sequential exclusions, overlapping flags,
+# threshold sensitivity, and optional selection without overwriting source rows.
 def run_filter_review(args):
     files = sorted(args.input.glob('date=*/part-*.parquet'))
     if not files:
@@ -328,6 +334,8 @@ def run_filter_review(args):
 
 
 # ===================== 3. STATION COVERAGE AUDIT =====================
+# Aggregate by station, route, date, and hour to distinguish persistent zero
+# coverage from intermittent observations. No physical failure is inferred.
 def run_station_coverage(args):
     files = sorted(args.input.glob('date=*/part-*.parquet'))
     if not files:
@@ -494,7 +502,110 @@ def run_continuity_audit():
     finally:
         metadata.write_text(json.dumps(settings, indent=2))
 
-# ===================== 5. RUN ENABLED SECTIONS =====================
+
+# ===================== 5. RANK STATIONS FROM SAVED REPORTS =====================
+def run_station_ranking():
+    """Rank continuity candidates; no raw observations are read or filtered.
+
+    Primary ranking: number of days with a positive-coverage run >=120 min.
+    Tie breakers: positive-row percentage, then station ID for reproducibility.
+    Positive coverage means >0%, not full observation or validated reliability.
+    A long run could occur overnight: this does not establish rush-hour coverage.
+    Existing continuity runs reset daily and do not bridge missing intervals.
+    """
+    continuity_path = CONTINUITY_REPORT_FOLDER / 'station_daily_continuity.csv'
+    coverage_path = STATION_REPORT_FOLDER / 'station_coverage.csv'
+    for source in [continuity_path, coverage_path]:
+        if not source.is_file():
+            raise ValueError(f'Required completed audit report missing: {source}')
+    if RANKING_REPORT_FOLDER.exists():
+        raise ValueError('Choose a new RANKING_REPORT_FOLDER to preserve prior results.')
+
+    # Validate source run status before combining reports. Incomplete CSVs can
+    # exist after an interrupted audit and must not masquerade as full results.
+    for folder in [CONTINUITY_REPORT_FOLDER, STATION_REPORT_FOLDER]:
+        status = json.loads((folder / 'run_settings.json').read_text())
+        if status.get('status') != 'complete':
+            raise ValueError(f'Source audit is not complete: {folder}')
+
+    daily = pd.read_csv(continuity_path)
+    coverage = pd.read_csv(coverage_path)
+    if daily.empty or coverage.empty:
+        raise ValueError('Source reports must contain observations.')
+    if daily.duplicated(['station_id', 'date']).any():
+        raise ValueError('Duplicate station-days in continuity report; investigate before ranking.')
+
+    # Each threshold records whether the station had at least ONE run that day;
+    # days at different thresholds overlap and must never be added together.
+    for minutes in [30, 60, 120]:
+        daily[f'days_run_ge{minutes}min'] = daily.longest_positive_run_minutes.ge(minutes).astype('int64')
+    daily['days_any_positive'] = daily.positive_rows.gt(0).astype('int64')
+    ranking = daily.groupby('station_id').agg(
+        days_present=('date', 'nunique'),
+        days_any_positive=('days_any_positive', 'sum'),
+        days_run_ge30min=('days_run_ge30min', 'sum'),
+        days_run_ge60min=('days_run_ge60min', 'sum'),
+        days_run_ge120min=('days_run_ge120min', 'sum'),
+        rows=('rows', 'sum'), positive_rows=('positive_rows', 'sum'),
+        zero_rows=('zero_rows', 'sum'),
+        invalid_coverage_rows=('invalid_coverage_rows', 'sum'),
+        longest_positive_run_minutes=('longest_positive_run_minutes', 'max'),
+        median_daily_longest_positive_run_minutes=('longest_positive_run_minutes', 'median'),
+        gaps_over_5_minutes=('gaps_over_5_minutes', 'sum'),
+        duplicate_timestamps=('duplicate_timestamps', 'sum'),
+    ).reset_index()
+
+    # Keep both denominators: days actually represented and all dates in the
+    # source report. Missing station-days must not inflate apparent coverage.
+    study_days = daily.date.nunique()
+    ranking['positive_rows_pct'] = 100 * ranking.positive_rows / ranking.rows
+    ranking['days_ge120_pct_of_present'] = 100 * ranking.days_run_ge120min / ranking.days_present
+    ranking['days_ge120_pct_of_study'] = 100 * ranking.days_run_ge120min / study_days
+
+    # Preserve multiple route/direction assignments rather than silently choosing
+    # the first. Multiple assignments are flagged for later metadata investigation.
+    def join_assignments(values):
+        return '; '.join(sorted(set(values.dropna().astype(str))))
+
+    identity = coverage.groupby('station_id').agg(
+        freeway=('freeway', join_assignments),
+        direction=('direction', join_assignments),
+        route_direction_groups=('station_id', 'size'),
+        coverage_report_rows=('rows', 'sum'),
+        coverage_report_positive_rows=('positive_rows', 'sum'),
+    ).reset_index()
+    ranking = ranking.merge(identity, on='station_id', how='left', validate='one_to_one', indicator=True)
+    if not ranking['_merge'].eq('both').all():
+        raise ValueError('Station IDs differ between reports; investigate their provenance.')
+    ranking = ranking.drop(columns='_merge')
+    # Reconciliation catches reports from different periods or inconsistent inputs.
+    if not ranking.rows.eq(ranking.coverage_report_rows).all() or not ranking.positive_rows.eq(ranking.coverage_report_positive_rows).all():
+        raise ValueError('Coverage and continuity counts disagree; do not rank mismatched reports.')
+    ranking['multiple_route_assignments'] = ranking.route_direction_groups.gt(1)
+    ranking = ranking.sort_values(['days_run_ge120min', 'positive_rows_pct', 'station_id'], ascending=[False, False, True]).reset_index(drop=True)
+    ranking.insert(0, 'rank', range(1, len(ranking) + 1))
+
+    # Save ALL stations, including zero-coverage stations, to document the full
+    # comparison. This is a candidate ranking, not a final station selection.
+    RANKING_REPORT_FOLDER.mkdir(parents=True)
+    ranking.to_csv(RANKING_REPORT_FOLDER / 'station_ranking.csv', index=False)
+    settings = {
+        'status': 'complete', 'created_utc': datetime.now(timezone.utc).isoformat(),
+        'inputs': [str(continuity_path), str(coverage_path)],
+        'study_days': int(study_days), 'stations_ranked': len(ranking),
+        'ranking_order': ['days_run_ge120min descending', 'positive_rows_pct descending', 'station_id ascending'],
+        'limitations': ['Positive is >0%, not validated reliability.',
+                        'No rush-hour requirement.', 'Daily run resets.',
+                        'No final station exclusion or traffic-event detection.'],
+    }
+    (RANKING_REPORT_FOLDER / 'run_settings.json').write_text(json.dumps(settings, indent=2))
+    display = ['rank', 'station_id', 'freeway', 'direction', 'days_present', 'days_run_ge120min', 'positive_rows_pct']
+    print('\nTop 20 continuity candidates:\n' + ranking[display].head(20).round(2).to_string(index=False))
+    print(f'\nStations ranked: {len(ranking):,}; study dates: {study_days}')
+    print(f'Stations with at least one two-hour positive run: {int(ranking.days_run_ge120min.gt(0).sum()):,}')
+    print(f'Saved: {RANKING_REPORT_FOLDER.resolve()}')
+
+# ===================== 6. RUN ENABLED SECTIONS =====================
 def main():
     switches = {
         'Preparation': RUN_PREPARATION,
@@ -503,6 +614,7 @@ def main():
         'Station coverage audit': RUN_STATION_COVERAGE_AUDIT,
         'Filtered selection': RUN_FILTERED_SELECTION,
         'Continuity audit': RUN_CONTINUITY_AUDIT,
+        'Station ranking': RUN_STATION_RANKING,
     }
     for label, enabled in switches.items():
         print(f'{label}: {"ON" if enabled else "OFF"}')
@@ -527,6 +639,9 @@ def main():
 
     if RUN_CONTINUITY_AUDIT:
         run_continuity_audit()
+
+    if RUN_STATION_RANKING:
+        run_station_ranking()
 
 
 if __name__ == '__main__':
