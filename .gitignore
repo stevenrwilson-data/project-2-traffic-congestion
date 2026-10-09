@@ -14,3 +14,5 @@ __pycache__/
 traffic_prepared_test/
 
 traffic_essential_40/
+
+audit_reports/batch_1_observation_quality_v2/*.parquet

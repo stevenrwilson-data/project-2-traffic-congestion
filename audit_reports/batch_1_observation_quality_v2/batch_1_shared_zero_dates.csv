@@ -1,0 +1,3 @@
+date,rows,zero_rows,positive_rows,invalid_coverage_rows,essential_rows,duplicate_copies,invalid_time_rows,ge0_rows,ge5_rows,ge20_rows,ge40_rows,ge60_rows,ge80_rows,ge100_rows,stations_present,stations_absent_from_study_pool,stations_all_zero,stations_no_positive,zero_pct_all_rows,positive_pct_all_rows,shared_zero_diagnostic,ever_positive_pool_rows,zero_pct_ever_positive_pool,shared_zero_ever_positive_pool
+2026-02-28,551808,551769,39,0,551808,0,0,551808,39,39,12,1,0,0,1916,0,1915,1915,99.99293232428671,0.007067675713291579,True,138240,99.97178819444444,True
+2026-05-27,551808,551808,0,0,551808,0,0,551808,0,0,0,0,0,0,1916,0,1916,1916,100.0,0.0,True,138240,100.0,True

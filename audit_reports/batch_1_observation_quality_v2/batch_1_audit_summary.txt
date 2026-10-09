@@ -1,0 +1,21 @@
+BATCH 1 — OBSERVATION QUALITY AND MISSINGNESS
+Saved rows scanned: 168,870,624; mainline rows: 66,193,968
+Unattributed invalid-station rows: 0
+Stations: 1,916; ever-positive candidate pool: 480
+Zero-observed rows: 56,792,035
+Invalid coverage rows: 0
+Threshold retention (all attributed ML records): {">=0%": 66193968, ">=5%": 9401933, ">=20%": 9399629, ">=40%": 9038302, ">=60%": 8350856, ">=80%": 6873781, ">=100%": 6427530}
+Shared zero diagnostic dates: 2026-02-28, 2026-05-27
+Missing prepared dates: 
+
+INTERPRETATION AND DECISION GATE
+Candidate pool includes every ever-positive station; no final threshold or corridor chosen.
+Threshold 0 includes zero-observed rows. Positive coverage is not fully observed coverage.
+Speed continuity additionally requires valid identity/time/date/speed/grid and no duplicate copies.
+Runs stop at midnight, route changes, invalid rows, and missing timestamps.
+March 8 local day is 23 hours; its clock jump is not evidence of detector failure.
+Observed coverage describes recorded flags, not verified hardware health or causal outage diagnosis.
+Station absence differs from a present record with zero coverage.
+Run lengths are interval counts times five minutes; daily longest runs do not measure complete-day coverage.
+Reusable CSV summaries and a daily Parquet intermediate answer these questions without redundant charts.
+Next: obtain historical station metadata and compare geographically coherent corridors.

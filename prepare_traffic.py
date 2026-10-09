@@ -23,7 +23,8 @@ RUN_FILTERED_SELECTION = False
 RUN_CONTINUITY_AUDIT = False
 RUN_STATION_RANKING = False
 RUN_TOP_STATION_REVIEW = False
-RUN_RANKING_NETWORK_CHECKS = True
+RUN_RANKING_NETWORK_CHECKS = False
+RUN_BATCH_1 = False
 
 # ===================== SETTINGS: EDIT HERE =====================
 RAW_DATA_FOLDER = Path('station_5min')
@@ -41,6 +42,12 @@ START_DATE = '2026-02-01'
 END_DATE = '2026-05-31'
 SELECTED_LANE_TYPES = ['ML']
 MIN_OBSERVED_PCT = 40
+# Separate folder preserves the incomplete first attempt for the audit trail.
+BATCH_1_REPORT_FOLDER = Path('audit_reports/batch_1_observation_quality_v2')
+BATCH_1_THRESHOLDS = [0, 5, 20, 40, 60, 80, 100]
+# These are diagnostic flags, NOT scientific exclusions or final selection rules.
+BATCH_1_SHARED_ZERO_PCT = 95
+BATCH_1_RUN_MINUTES = 120
 
 # Existing output folders are protected. To rerun a section, change its
 # output folder above to a new name. Ignore large selection folders in Git.
@@ -475,7 +482,8 @@ def run_continuity_audit():
                 group.loc[valid & group.observed_pct.gt(0), 'coverage_state'] = 'positive'
                 spacing = group.timestamp.diff()
                 same_state = group.coverage_state.eq(group.coverage_state.shift())
-                group['run_id'] = (~spacing.eq(pd.Timedelta(minutes=5)) | ~same_state).cumsum()
+                # Arrow Boolean arrays have no Boolean cumulative-sum kernel.
+                group['run_id'] = (~spacing.eq(pd.Timedelta(minutes=5)) | ~same_state).fillna(True).astype('int64').cumsum()
                 runs = group.groupby('run_id').agg(coverage_state=('coverage_state', 'first'), intervals=('timestamp', 'size'))
                 positive = runs.loc[runs.coverage_state.eq('positive'), 'intervals']
                 zero = runs.loc[runs.coverage_state.eq('zero'), 'intervals']
@@ -799,7 +807,278 @@ def run_ranking_network_checks():
     print('\nRequested-date network check:\n' + selected_dates[display].round(3).to_string(index=False))
     print(f'\nSaved: {REVIEW_CHECKS_REPORT_FOLDER.resolve()}')
 
-# ===================== 8. RUN ENABLED SECTIONS =====================
+# ===================== BATCH 1. COMBINED OBSERVATION QUALITY =====================
+# Questions 1-6 are calculated together in one pass over prepared daily parts.
+# Legacy audits remain reproducible above; do not enable them with this batch
+# unless you deliberately want their separate outputs and additional scans.
+
+
+def batch_1_day_metrics(frame, day):
+    """Return daily station metrics, exact coverage counts, and hourly summaries.
+
+    Retention uses ALL saved mainline records as its denominator. Continuity
+    requires a valid timestamp/date/station/speed, exact five-minute spacing,
+    and no duplicate timestamp copies. Flow and occupancy are NOT required:
+    this is a preliminary speed/coverage audit, not the final traffic dataset.
+    """
+    frame = frame.copy()
+    if frame.empty:
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), 0
+    # Missing/invalid identifiers cannot be attributed to a physical station.
+    # Preserve their count in the manifest instead of silently hiding it.
+    invalid_ids = frame.invalid_station_id.fillna(True)
+    unattributed = int(invalid_ids.sum())
+    frame = frame.loc[~invalid_ids].copy()
+    if frame.empty:
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), unattributed
+    frame['station_id'] = frame.station_id.astype('int64')
+    coverage_valid = (~frame.invalid_observed_pct.fillna(True)
+                      & frame.observed_pct.between(0, 100))
+    frame['zero_rows'] = coverage_valid & frame.observed_pct.eq(0)
+    frame['positive_rows'] = coverage_valid & frame.observed_pct.gt(0)
+    frame['invalid_coverage_rows'] = ~coverage_valid
+    # Exclude ALL copies of ambiguous station/timestamp duplicates from runs.
+    # Retention counts still describe saved records; neither source nor old
+    # analysis_eligible flags are rewritten by this audit.
+    duplicate_copies = frame.duplicated(['station_id', 'timestamp'], keep=False)
+    required = ['invalid_timestamp', 'date_mismatch', 'invalid_station_id',
+                'invalid_speed', 'off_5min_grid', 'duplicate_station_timestamp']
+    frame['essential_rows'] = (~frame[required].fillna(True).any(axis=1)
+                               & ~duplicate_copies
+                               & frame.timestamp.notna()
+                               & frame.timestamp.dt.strftime('%Y-%m-%d').eq(day))
+    frame['duplicate_copies'] = duplicate_copies
+    frame['invalid_time_rows'] = (frame.timestamp.isna()
+                                  | frame.invalid_timestamp.fillna(True)
+                                  | frame.date_mismatch.fillna(True))
+    for threshold in BATCH_1_THRESHOLDS:
+        frame[f'ge{threshold}_rows'] = coverage_valid & frame.observed_pct.ge(threshold)
+    summed = ['zero_rows', 'positive_rows', 'invalid_coverage_rows', 'essential_rows',
+              'duplicate_copies', 'invalid_time_rows'] + [f'ge{t}_rows' for t in BATCH_1_THRESHOLDS]
+    groups = frame.groupby('station_id', sort=True)
+    daily = groups[summed].sum()
+    daily['rows'] = groups.size()
+    # Route changes are reported, not interpreted as geographic adjacency.
+    frame['route_label'] = (frame.freeway.astype('string').fillna('UNKNOWN') + '/'
+                            + frame.direction.astype('string').fillna('UNKNOWN'))
+    daily['routes_in_day'] = frame.groupby('station_id').route_label.nunique()
+    routes = frame.groupby('station_id').route_label.agg(lambda s: '|'.join(sorted(set(s))))
+    daily['route_labels'] = routes
+
+    # Sort once per day, then use vectorized runs for all thresholds. Parts may
+    # split station series; concatenating the daily parts first avoids breaks
+    # introduced merely by Parquet chunk boundaries.
+    ordered = frame.sort_values(['station_id', 'timestamp'], kind='stable')
+    same_station = ordered.station_id.eq(ordered.station_id.shift())
+    consecutive = (same_station & ordered.timestamp.diff().eq(pd.Timedelta(minutes=5))
+                   & ordered.route_label.eq(ordered.route_label.shift()))
+    for label, threshold in [('positive', None)] + [(f'ge{t}', t) for t in BATCH_1_THRESHOLDS]:
+        meets = (ordered.positive_rows if threshold is None else ordered[f'ge{threshold}_rows'])
+        valid = ordered.essential_rows & meets
+        # Invalid or below-threshold intervals break a run. Missing timestamps
+        # also break it; never bridge gaps or connect separate stations.
+        starts = valid & ~(consecutive & valid.shift(fill_value=False))
+        # Parquet may restore Boolean flags as bool[pyarrow]. Count integer
+        # run starts explicitly; Arrow does not implement cumsum on Booleans.
+        # The conversion also gives identical run IDs with NumPy-backed flags.
+        run_id = starts.fillna(False).astype('int64').cumsum()
+        lengths = ordered.loc[valid, ['station_id']].copy()
+        lengths['run_id'] = run_id.loc[valid]
+        run_lengths = lengths.groupby(['station_id', 'run_id']).size()
+        longest = run_lengths.groupby(level=0).max() if not run_lengths.empty else pd.Series(dtype='int64')
+        daily[f'{label}_speed_valid_rows'] = valid.groupby(ordered.station_id).sum()
+        # N five-minute interval records represent N*5 minutes of interval
+        # exposure, not (N-1)*5 minutes between timestamp endpoints.
+        daily[f'{label}_longest_run_minutes'] = longest.reindex(daily.index, fill_value=0) * 5
+
+    daily['date'] = day
+    # Clock-aware expected day length: March 8 has 276, not 288, intervals.
+    local_day = pd.Timestamp(day, tz='America/Los_Angeles')
+    next_day = pd.Timestamp(pd.Timestamp(day) + pd.Timedelta(days=1), tz='America/Los_Angeles')
+    expected = int((next_day - local_day) / pd.Timedelta(minutes=5))
+    daily['expected_intervals_if_active_all_day'] = expected
+    valid_times = frame.loc[frame.essential_rows, ['station_id', 'timestamp']]
+    unique_times = valid_times.groupby('station_id').timestamp.nunique()
+    daily['unique_speed_valid_timestamps'] = unique_times.reindex(daily.index, fill_value=0)
+    # Wall-clock gaps across DST still break runs. They must not be labeled a
+    # detector outage; the report explicitly marks the DST transition date.
+    daily['dst_transition_day'] = expected != 288
+
+    distribution = (frame.loc[coverage_valid].groupby(['station_id', 'observed_pct'])
+                    .size().rename('rows').reset_index())
+    hour_frame = frame.loc[~frame.invalid_time_rows].copy()
+    hour_frame['hour'] = hour_frame.timestamp.dt.hour
+    # Network/hour percentages describe records, not traffic volumes. A
+    # station with positive records elsewhere in the hour can still have gaps.
+    hourly = hour_frame.groupby('hour')[['zero_rows', 'positive_rows', 'invalid_coverage_rows']].sum()
+    hourly['rows'] = hour_frame.groupby('hour').size()
+    hourly['stations_present'] = hour_frame.groupby('hour').station_id.nunique()
+    zero_station_hours = (hour_frame.groupby(['hour', 'station_id']).zero_rows.all()
+                          .groupby(level=0).sum())
+    hourly['stations_all_zero'] = zero_station_hours
+    hourly['date'] = day
+    return daily.reset_index(), distribution, hourly.reset_index(), unattributed
+
+
+def run_batch_1():
+    """Produce reusable quality tables; do not filter or select source records."""
+    output = BATCH_1_REPORT_FOLDER
+    if output.exists():
+        raise ValueError(f'Batch 1 output exists: {output}. Choose a new folder; no files overwritten.')
+    if (not BATCH_1_THRESHOLDS or len(set(BATCH_1_THRESHOLDS)) != len(BATCH_1_THRESHOLDS)
+            or any(t < 0 or t > 100 or int(t) != t for t in BATCH_1_THRESHOLDS)):
+        raise ValueError('Batch 1 thresholds must be distinct whole percentages between 0 and 100.')
+    if not 0 <= BATCH_1_SHARED_ZERO_PCT <= 100 or BATCH_1_RUN_MINUTES <= 0:
+        raise ValueError('Check the shared-zero diagnostic percentage and run duration.')
+    dates = pd.date_range(START_DATE, END_DATE)
+    if dates.empty:
+        raise ValueError('Batch 1 end date precedes start date.')
+    inputs = [(d.strftime('%Y-%m-%d'), sorted((PREPARED_DATA_FOLDER / f'date={d:%Y-%m-%d}').glob('part-*.parquet'))) for d in dates]
+    missing = [day for day, paths in inputs if not paths]
+    if len(missing) == len(inputs):
+        raise ValueError(f'No prepared daily parts found in {PREPARED_DATA_FOLDER}.')
+    output.mkdir(parents=True)
+    settings_path = output / 'batch_1_run_settings.json'
+    settings = {'status': 'incomplete', 'created_utc': datetime.now(timezone.utc).isoformat(),
+                'input': str(PREPARED_DATA_FOLDER), 'start_date': START_DATE, 'end_date': END_DATE,
+                'scope': 'ML', 'thresholds': BATCH_1_THRESHOLDS,
+                'run_minutes_diagnostic': BATCH_1_RUN_MINUTES,
+                'shared_zero_pct_diagnostic': BATCH_1_SHARED_ZERO_PCT,
+                'missing_dates': missing, 'selection_adopted': False,
+                'continuity_requirements': ['valid time/date/station/speed', 'five-minute grid',
+                                           'exclude every duplicate copy', 'same route',
+                                           'do not bridge gaps or midnight'],
+                'coverage_count_denominator': 'All saved ML rows attributed to a valid station ID',
+                'threshold_zero_warning': '>=0 includes zero coverage; baseline only, not observed usability.'}
+    settings_path.write_text(json.dumps(settings, indent=2))
+    columns = ['timestamp', 'station_id', 'freeway', 'direction', 'lane_type', 'observed_pct',
+               'invalid_observed_pct', 'invalid_timestamp', 'date_mismatch', 'invalid_station_id',
+               'invalid_speed', 'off_5min_grid', 'duplicate_station_timestamp']
+    daily_parts, distributions, hour_parts = [], [], []
+    all_saved_rows = mainline_rows = unattributed_rows = 0
+    try:
+        for day, paths in inputs:
+            if not paths:
+                continue
+            print(f'Batch 1: {day}', flush=True)
+            # Read only needed columns, discard non-mainline records immediately,
+            # and hold at most one day's raw rows. Source Parquet is untouched.
+            frames = []
+            for path in paths:
+                part = pd.read_parquet(path, columns=columns)
+                all_saved_rows += len(part)
+                part = part.loc[part.lane_type.eq('ML')].copy()
+                mainline_rows += len(part)
+                frames.append(part)
+            day_frame = pd.concat(frames, ignore_index=True)
+            daily, distribution, hourly, unattributed = batch_1_day_metrics(day_frame, day)
+            unattributed_rows += unattributed
+            daily_parts.append(daily)
+            distributions.append(distribution)
+            hour_parts.append(hourly)
+            del day_frame, frames
+        daily = pd.concat(daily_parts, ignore_index=True)
+        if daily.empty:
+            raise ValueError('No attributable mainline station records found.')
+        if int(daily.rows.sum()) + unattributed_rows != mainline_rows:
+            raise ValueError('Batch 1 row reconciliation failed.')
+        distribution = pd.concat(distributions, ignore_index=True)
+        distribution = distribution.groupby(['station_id', 'observed_pct'], as_index=False).rows.sum()
+        hourly = pd.concat(hour_parts, ignore_index=True)
+        grouped = daily.groupby('station_id')
+        counts = ['rows', 'zero_rows', 'positive_rows', 'invalid_coverage_rows', 'essential_rows',
+                  'duplicate_copies', 'invalid_time_rows'] + [f'ge{t}_rows' for t in BATCH_1_THRESHOLDS]
+        station = grouped[counts].sum()
+        station['days_present'] = grouped.date.nunique()
+        station['days_absent_from_requested_window'] = len(dates) - station.days_present
+        station['days_with_positive_coverage'] = daily.positive_rows.gt(0).groupby(daily.station_id).sum()
+        station['route_labels'] = grouped.route_labels.agg(lambda s: '|'.join(sorted(set(s))))
+        station['positive_pct_all_rows'] = 100 * station.positive_rows / station.rows
+        labels = ['positive'] + [f'ge{t}' for t in BATCH_1_THRESHOLDS]
+        for label in labels:
+            station[f'{label}_speed_valid_rows'] = grouped[f'{label}_speed_valid_rows'].sum()
+            station[f'{label}_longest_run_minutes'] = grouped[f'{label}_longest_run_minutes'].max()
+            station[f'{label}_days_run_ge{BATCH_1_RUN_MINUTES}min'] = (
+                daily[f'{label}_longest_run_minutes'].ge(BATCH_1_RUN_MINUTES)
+                .groupby(daily.station_id).sum())
+            if label != 'positive':
+                station[f'{label}_pct_all_rows'] = 100 * station[f'{label}_rows'] / station.rows
+        daily['station_all_zero'] = daily.zero_rows.eq(daily.rows)
+        daily['station_no_positive'] = daily.positive_rows.eq(0)
+        network = daily.groupby('date')[counts].sum()
+        network['stations_present'] = daily.groupby('date').station_id.nunique()
+        network['stations_absent_from_study_pool'] = len(station) - network.stations_present
+        network['stations_all_zero'] = daily.groupby('date').station_all_zero.sum()
+        network['stations_no_positive'] = daily.groupby('date').station_no_positive.sum()
+        for table in [network, hourly]:
+            table['zero_pct_all_rows'] = 100 * table.zero_rows / table.rows
+            table['positive_pct_all_rows'] = 100 * table.positive_rows / table.rows
+            table['shared_zero_diagnostic'] = table.zero_pct_all_rows.ge(BATCH_1_SHARED_ZERO_PCT)
+        shared_dates = network.index[network.shared_zero_diagnostic].tolist()
+        # A high network-zero percentage may reflect persistently unobserved
+        # stations. Also summarize only stations EVER positive in this window;
+        # neither denominator proves a feed outage or hardware failure.
+        positive_ids = station.index[station.positive_rows.gt(0)]
+        active_daily = daily.loc[daily.station_id.isin(positive_ids)]
+        active_network = active_daily.groupby('date')[['rows', 'zero_rows', 'positive_rows']].sum()
+        network['ever_positive_pool_rows'] = active_network.rows.reindex(network.index, fill_value=0)
+        network['zero_pct_ever_positive_pool'] = (100 * active_network.zero_rows / active_network.rows).reindex(network.index)
+        network['shared_zero_ever_positive_pool'] = network.zero_pct_ever_positive_pool.ge(BATCH_1_SHARED_ZERO_PCT)
+        shared_dates = network.index[network.shared_zero_diagnostic | network.shared_zero_ever_positive_pool].tolist()
+        shared_station_dates = daily.loc[daily.date.isin(shared_dates) & daily.station_all_zero]
+        station['shared_zero_dates_with_station_all_zero'] = (
+            shared_station_dates.groupby('station_id').date.agg(lambda s: '|'.join(sorted(s)))
+            .reindex(station.index, fill_value=''))
+        # This is a descriptive candidate POOL, not a quality ranking or cutoff.
+        # Keep every station with any positive observation for later comparison.
+        station['candidate_pool_any_positive'] = station.positive_rows.gt(0)
+        station.reset_index().to_csv(output / 'batch_1_station_quality.csv', index=False)
+        # This wide, reusable daily intermediate is compressed Parquet rather
+        # than a huge CSV. Keep it local/ignored in Git; commit compact reports.
+        daily.to_parquet(output / 'batch_1_station_daily_quality.parquet', index=False)
+        distribution.to_csv(output / 'batch_1_station_observation_distribution.csv', index=False)
+        distribution.groupby('observed_pct', as_index=False).rows.sum().to_csv(output / 'batch_1_network_observation_distribution.csv', index=False)
+        network.reset_index().to_csv(output / 'batch_1_network_daily_quality.csv', index=False)
+        hourly.to_csv(output / 'batch_1_network_hourly_quality.csv', index=False)
+        network.loc[shared_dates].reset_index().to_csv(output / 'batch_1_shared_zero_dates.csv', index=False)
+        station.loc[station.candidate_pool_any_positive].reset_index().to_csv(output / 'batch_1_candidate_pool.csv', index=False)
+        totals = {f'>={t}%': int(station[f'ge{t}_rows'].sum()) for t in BATCH_1_THRESHOLDS}
+        report = '\n'.join([
+            'BATCH 1 — OBSERVATION QUALITY AND MISSINGNESS',
+            f'Saved rows scanned: {all_saved_rows:,}; mainline rows: {mainline_rows:,}',
+            f'Unattributed invalid-station rows: {unattributed_rows:,}',
+            f'Stations: {len(station):,}; ever-positive candidate pool: {len(positive_ids):,}',
+            f'Zero-observed rows: {int(station.zero_rows.sum()):,}',
+            f'Invalid coverage rows: {int(station.invalid_coverage_rows.sum()):,}',
+            'Threshold retention (all attributed ML records): ' + json.dumps(totals),
+            'Shared zero diagnostic dates: ' + ', '.join(shared_dates),
+            'Missing prepared dates: ' + ', '.join(missing),
+            '', 'INTERPRETATION AND DECISION GATE',
+            'Candidate pool includes every ever-positive station; no final threshold or corridor chosen.',
+            'Threshold 0 includes zero-observed rows. Positive coverage is not fully observed coverage.',
+            'Speed continuity additionally requires valid identity/time/date/speed/grid and no duplicate copies.',
+            'Runs stop at midnight, route changes, invalid rows, and missing timestamps.',
+            'March 8 local day is 23 hours; its clock jump is not evidence of detector failure.',
+            'Observed coverage describes recorded flags, not verified hardware health or causal outage diagnosis.',
+            'Station absence differs from a present record with zero coverage.',
+            'Run lengths are interval counts times five minutes; daily longest runs do not measure complete-day coverage.',
+            'Reusable CSV summaries and a daily Parquet intermediate answer these questions without redundant charts.',
+            'Next: obtain historical station metadata and compare geographically coherent corridors.',
+        ])
+        (output / 'batch_1_audit_summary.txt').write_text(report + '\n')
+        settings.update(status='complete', saved_rows_scanned=all_saved_rows,
+                        mainline_rows=mainline_rows, unattributed_rows=unattributed_rows,
+                        stations=len(station), candidate_pool_stations=len(positive_ids))
+        print('\n' + report)
+        print(f'\nSaved Batch 1 reports: {output.resolve()}')
+    except Exception as error:
+        settings.update(status='incomplete', error=str(error))
+        raise
+    finally:
+        settings_path.write_text(json.dumps(settings, indent=2))
+
+
+# ===================== RUN ENABLED SECTIONS =====================
 def main():
     switches = {
         'Preparation': RUN_PREPARATION,
@@ -811,6 +1090,7 @@ def main():
         'Station ranking': RUN_STATION_RANKING,
         'Top-station review': RUN_TOP_STATION_REVIEW,
         'Ranking/network checks': RUN_RANKING_NETWORK_CHECKS,
+        'Batch 1 observation quality': RUN_BATCH_1,
     }
     for label, enabled in switches.items():
         print(f'{label}: {"ON" if enabled else "OFF"}')
@@ -844,6 +1124,9 @@ def main():
 
     if RUN_RANKING_NETWORK_CHECKS:
         run_ranking_network_checks()
+
+    if RUN_BATCH_1:
+        run_batch_1()
 
 
 if __name__ == '__main__':
