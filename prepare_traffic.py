@@ -20,12 +20,14 @@ RUN_FILTER_AUDIT = False
 RUN_THRESHOLD_COMPARISON = False
 RUN_STATION_COVERAGE_AUDIT = False
 RUN_FILTERED_SELECTION = False
+RUN_CONTINUITY_AUDIT = False
 
 # ===================== SETTINGS: EDIT HERE =====================
 RAW_DATA_FOLDER = Path('station_5min')
 PREPARED_DATA_FOLDER = Path('traffic_prepared')
 FILTER_REPORT_FOLDER = Path('audit_reports/filter_review')
 STATION_REPORT_FOLDER = Path('audit_reports/station_coverage')
+CONTINUITY_REPORT_FOLDER = Path('audit_reports/continuity')
 SELECTION_FOLDER = Path('traffic_essential_40')
 START_DATE = '2026-02-01'
 END_DATE = '2026-05-31'
@@ -413,7 +415,86 @@ def run_station_coverage(args):
 
 
 
-# ===================== 4. RUN ENABLED SECTIONS =====================
+
+# ===================== 4. DAILY CONTINUITY AUDIT =====================
+# Reads ALL valid-identity/time ML rows before coverage filtering.
+# Positive means observed_pct > 0, not a scientifically validated cutoff.
+# Runs stop at missing intervals, duplicates, state changes, and midnight.
+# Run length is number of consecutive five-minute records times five;
+# it describes measurement windows, not exact traffic-event duration.
+# Daily resets and local clock changes limit interpretation of these runs.
+def run_continuity_audit():
+    folders = sorted(PREPARED_DATA_FOLDER.glob('date=*'))
+    if not folders:
+        raise ValueError('No prepared daily folders found.')
+    if CONTINUITY_REPORT_FOLDER.exists():
+        raise ValueError('Choose a new CONTINUITY_REPORT_FOLDER before rerunning.')
+    CONTINUITY_REPORT_FOLDER.mkdir(parents=True)
+    settings = {'status': 'running', 'input': str(PREPARED_DATA_FOLDER),
+                'scope': 'ML before coverage filtering; valid station ID and timestamp',
+                'positive_definition': 'valid observed_pct > 0',
+                'run_rules': 'Exact five-minute spacing, same coverage state, reset each day',
+                'created_utc': datetime.now(timezone.utc).isoformat()}
+    metadata = CONTINUITY_REPORT_FOLDER / 'run_settings.json'
+    metadata.write_text(json.dumps(settings, indent=2))
+    summaries = []
+    columns = ['station_id', 'timestamp', 'lane_type', 'observed_pct',
+               'invalid_observed_pct', 'invalid_timestamp', 'invalid_station_id']
+    try:
+        for folder in folders:
+            files = sorted(folder.glob('part-*.parquet'))
+            if not files:
+                continue
+            print(f'Checking continuity: {folder.name}', flush=True)
+            chunks = []
+            for path in files:
+                chunk = pd.read_parquet(path, columns=columns)
+                chunk = chunk.loc[chunk.lane_type.eq('ML') & ~chunk.invalid_timestamp & ~chunk.invalid_station_id]
+                chunks.append(chunk)
+            day = pd.concat(chunks, ignore_index=True)
+            results = []
+            for station, group in day.groupby('station_id'):
+                group = group.sort_values('timestamp').copy()
+                group['coverage_state'] = 'invalid'
+                valid = ~group.invalid_observed_pct
+                group.loc[valid & group.observed_pct.eq(0), 'coverage_state'] = 'zero'
+                group.loc[valid & group.observed_pct.gt(0), 'coverage_state'] = 'positive'
+                spacing = group.timestamp.diff()
+                same_state = group.coverage_state.eq(group.coverage_state.shift())
+                group['run_id'] = (~spacing.eq(pd.Timedelta(minutes=5)) | ~same_state).cumsum()
+                runs = group.groupby('run_id').agg(coverage_state=('coverage_state', 'first'), intervals=('timestamp', 'size'))
+                positive = runs.loc[runs.coverage_state.eq('positive'), 'intervals']
+                zero = runs.loc[runs.coverage_state.eq('zero'), 'intervals']
+                results.append({
+                    'date': folder.name.removeprefix('date='), 'station_id': int(station),
+                    'rows': len(group), 'positive_rows': int(group.coverage_state.eq('positive').sum()),
+                    'zero_rows': int(group.coverage_state.eq('zero').sum()),
+                    'invalid_coverage_rows': int(group.coverage_state.eq('invalid').sum()),
+                    'longest_positive_run_minutes': int(positive.max()) * 5 if not positive.empty else 0,
+                    'longest_zero_run_minutes': int(zero.max()) * 5 if not zero.empty else 0,
+                    'gaps_over_5_minutes': int(spacing.gt(pd.Timedelta(minutes=5)).sum()),
+                    'duplicate_timestamps': int(group.timestamp.duplicated().sum()),
+                })
+            if results:
+                report = pd.DataFrame(results)
+                output = CONTINUITY_REPORT_FOLDER / 'station_daily_continuity.csv'
+                report.to_csv(output, mode='a', header=not output.exists(), index=False)
+                summaries.append({'date': folder.name.removeprefix('date='), 'station_days': len(report),
+                                  **{f'station_days_positive_run_ge{minutes}min': int(report.longest_positive_run_minutes.ge(minutes).sum())
+                                     for minutes in [30, 60, 120]}})
+        if summaries:
+            summary = pd.DataFrame(summaries)
+            summary.to_csv(CONTINUITY_REPORT_FOLDER / 'daily_continuity_summary.csv', index=False)
+            print('\nContinuity totals:\n' + summary.drop(columns='date').sum().to_string())
+        settings['status'] = 'complete'
+        print(f'Saved: {CONTINUITY_REPORT_FOLDER.resolve()}')
+    except BaseException as error:
+        settings.update(status='incomplete', error=str(error))
+        raise
+    finally:
+        metadata.write_text(json.dumps(settings, indent=2))
+
+# ===================== 5. RUN ENABLED SECTIONS =====================
 def main():
     switches = {
         'Preparation': RUN_PREPARATION,
@@ -421,6 +502,7 @@ def main():
         'Threshold comparison': RUN_THRESHOLD_COMPARISON,
         'Station coverage audit': RUN_STATION_COVERAGE_AUDIT,
         'Filtered selection': RUN_FILTERED_SELECTION,
+        'Continuity audit': RUN_CONTINUITY_AUDIT,
     }
     for label, enabled in switches.items():
         print(f'{label}: {"ON" if enabled else "OFF"}')
@@ -442,6 +524,9 @@ def main():
         run_station_coverage(argparse.Namespace(
             input=PREPARED_DATA_FOLDER, output=STATION_REPORT_FOLDER,
         ))
+
+    if RUN_CONTINUITY_AUDIT:
+        run_continuity_audit()
 
 
 if __name__ == '__main__':

@@ -1,0 +1,8 @@
+{
+  "status": "complete",
+  "input": "traffic_prepared",
+  "scope": "ML before coverage filtering; valid station ID and timestamp",
+  "positive_definition": "valid observed_pct > 0",
+  "run_rules": "Exact five-minute spacing, same coverage state, reset each day",
+  "created_utc": "2026-10-08T16:15:25.222125+00:00"
+}
