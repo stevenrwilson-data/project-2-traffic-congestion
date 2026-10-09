@@ -16,3 +16,9 @@ traffic_prepared_test/
 traffic_essential_40/
 
 audit_reports/batch_1_observation_quality_v2/*.parquet
+
+chp_incidents_2026/
+d07_text_meta_2023_12_22.txt
+d7_metadata_2026.json
+d7_meta.html
+clearinghouse.js
