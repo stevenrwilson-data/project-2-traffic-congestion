@@ -1,0 +1,11 @@
+event_id,rows_expected,rows_present,complete_profile
+1,13,13,True
+330,13,13,True
+332,13,13,True
+340,13,13,True
+342,13,12,False
+344,13,13,True
+346,13,13,True
+588,13,13,True
+1159,13,13,True
+1472,13,13,True

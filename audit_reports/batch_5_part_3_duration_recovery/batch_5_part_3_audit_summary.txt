@@ -1,0 +1,41 @@
+BATCH 5 — PART 3: CONGESTION DURATION AND RECOVERY
+
+OVERALL DURATION
+ events  stations  days  median_duration_minutes  q25_duration_minutes  q75_duration_minutes  p90_duration_minutes  right_censored_events
+   1457         5   103                     60.0                  30.0                 185.0                 355.0                     62
+
+DURATION BY STATION
+ station_id  events  days  median_duration_minutes  q25_duration_minutes  q75_duration_minutes  p90_duration_minutes  travel_order       Name
+     717185     254   101                     80.0                  35.0                285.00                 388.5             1  VINCENT 1
+     717190     251   101                     80.0                  35.0                297.50                 390.0             2  VINCENT 2
+     716152     243    94                     80.0                  32.5                295.00                 370.0             3 LARK ELLEN
+     717195     356    97                     50.0                  25.0                116.25                 240.0             4    AZUSA 1
+     717198     353   101                     50.0                  25.0                120.00                 248.0             5    AZUSA 2
+
+DURATION BY TIME PERIOD
+time_period  events  days  median_duration_minutes  q25_duration_minutes  q75_duration_minutes  p90_duration_minutes
+         AM     400    72                     50.0                  25.0                  70.0                  90.0
+     Midday     698   100                    170.0                  35.0                 335.0                 400.0
+         PM     359    88                     45.0                  25.0                 102.5                 160.0
+
+CORRIDOR-EPISODE RECOVERY
+ corridor_episode_id  stations_in_primary_propagation  first_recovery_station_id  first_recovery_travel_order  last_recovery_station_id  last_recovery_travel_order  first_recovery_lag_minutes  last_recovery_lag_minutes  recovery_span_minutes  travel_order_recovery_correlation
+                   2                                3                     716152                            3                    717190                           2                        75.0                      100.0                   25.0                             -0.866
+                   3                                4                     717198                            5                    717195                           4                        10.0                       65.0                   55.0                             -0.503
+                   4                                5                     717185                            1                    717198                           5                        25.0                       45.0                   20.0                              0.892
+                   5                                3                     717190                            2                    717185                           1                        15.0                       20.0                    5.0                             -0.866
+                   6                                3                     717185                            1                    716152                           3                        25.0                       80.0                   55.0                              0.866
+
+METHOD
+Sustained congestion is defined by the retained 50 mph + 15 minute
+state rule. Duration is measured from the first to last five-minute
+interval in the state episode. Right-censored episodes are retained in
+the recovery product-limit curve rather than treated as fully observed.
+
+For corridor recovery ordering, only stations included under the primary
+60-minute propagation window from Batch 5 Part 2b are used.
+
+PORTFOLIO FIGURES
+images/traffic_b5p3_duration_by_station.png
+images/traffic_b5p3_recovery_survival.png
+images/traffic_b5p3_recovery_order.png

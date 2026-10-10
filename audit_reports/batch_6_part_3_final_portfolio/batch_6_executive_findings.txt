@@ -1,0 +1,34 @@
+Traffic Breakdown and Congestion Dynamics on an I-10 East Corridor
+
+FINAL HEADLINE FINDINGS
+1. Sustained congestion and abrupt breakdown are empirically different traffic phenomena on this corridor.
+   Evidence: The sustained-state rule produced 1457 events, the LA abrupt-collapse rule 10, and the Caltrans spatial rule 7, with extremely low pairwise onset overlap.
+   Caveat: The definitions answer different operational questions rather than competing to identify one universal event set.
+
+2. Corridor-level abrupt-breakdown episode construction is robust to the temporal clustering rule.
+   Evidence: 15-, 30-, and 45-minute clustering windows all produced 6 corridor episodes.
+   Caveat: Only six corridor episodes were identified, so the result is strong for this sample but not a universal traffic-flow claim.
+
+3. Midday sustained-congestion episodes last substantially longer than AM or PM episodes.
+   Evidence: Median durations were 50 minutes AM, 170 midday, and 45 PM. The midday advantage remained positive after every leave-one-station and leave-one-date exclusion.
+   Caveat: Time-period comparisons are observational and may reflect demand, geometry, incidents, or recurring operational conditions.
+
+4. Sustained congestion is often persistent and has a long duration tail.
+   Evidence: Median duration was 60 minutes and the 90th percentile was 355 minutes.
+   Caveat: The sustained-state rule is an operational definition, and some episodes are right-censored by the analysis window.
+
+KEY METHODOLOGICAL DECISIONS
+- 100% observed coverage was retained because it produced the same selected-corridor row count as 80% coverage: 164657 rows.
+- Six corridor episodes were obtained under all tested 15/30/45-minute onset-clustering windows.
+- The primary propagation window is 60 minutes; 4/6 episode classifications were stable across 30/60/120 minutes.
+- Midday duration remained longer than AM/PM after every leave-one-station and leave-one-date exclusion: True.
+
+LIMITATIONS
+- The primary analysis covers one five-station I-10 East corridor, so findings should not be generalized to all Los Angeles freeways.
+- The study period is February through May 2026 rather than a full annual cycle.
+- Only 10 LA-rule abrupt onsets and 6 corridor episodes were identified.
+- The most concentrated abrupt-onset date accounts for 40.0% of all LA-rule onsets.
+- The analysis relies on loop-detector speed, flow, occupancy, and observed-percent fields rather than direct vehicle trajectories.
+- Sustained congestion and abrupt breakdown are defined with published operational rules, but no single universal breakdown definition exists.
+- The study is observational and does not identify causal drivers such as incidents, demand shocks, weather, or signal operations.
+- The product-limit probability analysis has only ten uncensored abrupt-breakdown observations and includes implausibly low pre-breakdown flows for a capacity interpretation.

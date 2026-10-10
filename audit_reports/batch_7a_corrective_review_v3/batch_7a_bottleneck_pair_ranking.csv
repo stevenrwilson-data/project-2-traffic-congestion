@@ -1,0 +1,5 @@
+bottleneck_rank,upstream_travel_order,upstream_station_id,upstream_name,downstream_travel_order,downstream_station_id,downstream_name,paired_intervals,queue_signature_intervals,queue_signature_pct_all_intervals,queue_signature_pct_when_upstream_congested,reverse_signature_intervals,persistent_queue_signature_runs_15min,median_downstream_minus_upstream_speed_when_signature
+1,3,716152,LARK ELLEN,4,717195,AZUSA 1,19066,1314,6.891849365362425,18.012337217272105,492,172,9.299999999999997
+2,2,717190,VINCENT 2,3,716152,LARK ELLEN,20106,513,2.551477170993733,6.580297588506927,336,36,21.8
+3,4,717195,AZUSA 1,5,717198,AZUSA 2,19788,391,1.9759450171821304,5.89388001205909,198,31,3.3000000000000043
+4,1,717185,VINCENT 1,2,717190,VINCENT 2,21008,104,0.49504950495049505,1.2900024807740016,100,6,2.349999999999998

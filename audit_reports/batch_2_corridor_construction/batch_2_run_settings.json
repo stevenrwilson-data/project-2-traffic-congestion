@@ -1,0 +1,22 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T07:44:01.703736+00:00",
+  "metadata_file": "d07_text_meta_2023_12_22.txt",
+  "batch_1_candidate_pool": "audit_reports/batch_1_observation_quality_v2/batch_1_candidate_pool.csv",
+  "batch_1_station_quality": "audit_reports/batch_1_observation_quality_v2/batch_1_station_quality.csv",
+  "gap_thresholds_miles": [
+    1.0,
+    2.0,
+    3.0,
+    5.0
+  ],
+  "minimum_corridor_stations_for_review": 4,
+  "selection_adopted": false,
+  "corridor_gap_warning": "Gap thresholds are sensitivity definitions for candidate construction, not scientific traffic-breakdown thresholds.",
+  "candidate_stations": 480,
+  "matched_candidate_stations": 480,
+  "unmatched_candidate_stations": 0,
+  "valid_geography_candidate_stations": 480,
+  "freeway_direction_combinations": 36,
+  "corridor_review_rows": 167
+}

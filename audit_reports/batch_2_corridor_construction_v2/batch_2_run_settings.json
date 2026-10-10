@@ -1,0 +1,23 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T07:58:19.631595+00:00",
+  "metadata_file": "d07_text_meta_2023_12_22.txt",
+  "batch_1_candidate_pool": "audit_reports/batch_1_observation_quality_v2/batch_1_candidate_pool.csv",
+  "batch_1_station_quality": "audit_reports/batch_1_observation_quality_v2/batch_1_station_quality.csv",
+  "minimum_corridor_stations_for_review": 4,
+  "selection_adopted": false,
+  "adjacency_definition": "Immediate same-freeway/direction neighbor in the full historical District 7 ML metadata inventory, ordered by absolute postmile.",
+  "corridor_definition": "Consecutive ever-positive candidate stations in the full physical ML station sequence; any intervening noncandidate ML station breaks the candidate corridor run.",
+  "metadata_rows": 4888,
+  "district_7_ml_rows": 1916,
+  "physical_ml_valid_geography": 1914,
+  "physical_ml_invalid_geography": 2,
+  "candidate_stations": 480,
+  "matched_candidate_stations": 480,
+  "unmatched_candidate_stations": 0,
+  "route_label_mismatches": 480,
+  "freeway_direction_combinations": 45,
+  "contiguous_candidate_runs": 238,
+  "isolated_candidate_runs": 131,
+  "corridor_review_rows": 31
+}

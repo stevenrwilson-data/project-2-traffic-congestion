@@ -1,0 +1,6 @@
+corridor_episode_id,stations_in_primary_propagation,first_recovery_station_id,first_recovery_travel_order,last_recovery_station_id,last_recovery_travel_order,first_recovery_lag_minutes,last_recovery_lag_minutes,recovery_span_minutes,travel_order_recovery_correlation
+2,3,716152,3,717190,2,75.0,100.0,25.0,-0.8660254037844387
+3,4,717198,5,717195,4,10.0,65.0,55.0,-0.5028011423654931
+4,5,717185,1,717198,5,25.0,45.0,20.0,0.892217816219194
+5,3,717190,2,717185,1,15.0,20.0,5.0,-0.8660254037844385
+6,3,717185,1,716152,3,25.0,80.0,55.0,0.8660254037844386

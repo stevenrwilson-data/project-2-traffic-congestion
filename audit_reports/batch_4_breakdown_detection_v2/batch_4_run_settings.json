@@ -1,0 +1,53 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T18:50:26.954540+00:00",
+  "selected_corridor": "Fwy_10_E_physical_run_6",
+  "station_ids_in_travel_order": [
+    717185,
+    717190,
+    716152,
+    717195,
+    717198
+  ],
+  "direction": "E",
+  "final_observed_pct": 100,
+  "analysis_window": "05:00-20:00",
+  "threshold_sensitivity_mph": [
+    40,
+    50,
+    55
+  ],
+  "threshold_persistence_intervals": 3,
+  "sources": [
+    {
+      "label": "FHWA D-PTSU speed-threshold discussion",
+      "url": "https://ops.fhwa.dot.gov/publications/fhwahop19029/ch4.htm",
+      "basis": "FHWA notes that freeway breakdown thresholds vary by facility, typically around 40-55 mph, and uses 50 mph as an appropriate illustrative threshold after comparing 40, 50 and 55 mph."
+    },
+    {
+      "label": "FHWA freeway breakdown persistence discussion",
+      "url": "https://ops.fhwa.dot.gov/publications/fhwahop08054/sect6.htm",
+      "basis": "FHWA describes the HCM convention that oversaturated freeway conditions lasting at least 15 minutes constitute sustained breakdown."
+    },
+    {
+      "label": "SHRP2 C05 / Los Angeles five-minute breakdown rule",
+      "url": "https://onlinepubs.trb.org/onlinepubs/shrp2/SHRP2prepubC05.pdf",
+      "basis": "The report summarizes Los Angeles work using five-minute data with a minimum 20 mph speed differential and a speed threshold of 40 mph to identify breakdown."
+    },
+    {
+      "label": "Caltrans PeMS bottleneck identification",
+      "url": "https://cagov.github.io/caldata-mdsa-caltrans-pems/data/bottlenecks/",
+      "basis": "Current Caltrans PeMS implementation uses a 20 mph inter-station speed drop, downstream speed below 40 mph, station separation under 3 miles, and persistence in at least 5 of 7 consecutive five-minute observations."
+    }
+  ],
+  "primary_method_adopted": null,
+  "analysis_rows": 102921,
+  "combined_events": 1474,
+  "example_heatmap_date": "2026-02-27",
+  "portfolio_figures": [
+    "images/traffic_b4_event_counts_by_method.png",
+    "images/traffic_b4_threshold_sensitivity.png",
+    "images/traffic_b4_onsets_by_hour.png",
+    "images/traffic_b4_example_speed_heatmap.png"
+  ]
+}

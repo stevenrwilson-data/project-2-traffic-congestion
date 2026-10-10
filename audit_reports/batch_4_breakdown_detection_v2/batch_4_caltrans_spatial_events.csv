@@ -1,0 +1,8 @@
+method,station_id,start_time,end_time,duration_minutes,intervals,onset_observed,recovery_observed,left_censored,right_censored,start_speed_mph,minimum_speed_mph,upstream_station_id,upstream_gap_miles
+Caltrans_PeMS_spatial,717195,2026-02-16 11:55:00,2026-02-16 12:50:00,60,12,True,True,False,False,42.5,29.9,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-02-16 13:45:00,2026-02-16 14:20:00,40,8,True,True,False,False,38.5,28.3,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-02-27 13:25:00,2026-02-27 14:45:00,85,17,True,True,False,False,40.5,39.4,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-03-30 15:30:00,2026-03-30 16:25:00,60,12,True,True,False,False,38.8,30.8,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-04-15 05:55:00,2026-04-15 06:45:00,55,11,True,True,False,False,54.4,6.8,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-05-23 15:10:00,2026-05-23 16:10:00,65,13,True,True,False,False,46.7,32.0,716152,0.5600000000000023
+Caltrans_PeMS_spatial,717195,2026-05-23 16:35:00,2026-05-23 18:05:00,95,19,True,True,False,False,37.5,31.8,716152,0.5600000000000023

@@ -1,0 +1,46 @@
+method,concept_role,hour_start,hour_end,events,within_method_pct
+Threshold_50_15min,Congested state,5,6,5,0.34317089910775567
+Threshold_50_15min,Congested state,6,7,6,0.41180507892930684
+Threshold_50_15min,Congested state,7,8,287,19.698009608785174
+Threshold_50_15min,Congested state,8,9,64,4.392587508579273
+Threshold_50_15min,Congested state,9,10,38,2.608098833218943
+Threshold_50_15min,Congested state,10,11,37,2.539464653397392
+Threshold_50_15min,Congested state,11,12,52,3.568977350720659
+Threshold_50_15min,Congested state,12,13,192,13.177762525737819
+Threshold_50_15min,Congested state,13,14,269,18.462594371997255
+Threshold_50_15min,Congested state,14,15,148,10.157858613589568
+Threshold_50_15min,Congested state,15,16,81,5.5593685655456415
+Threshold_50_15min,Congested state,16,17,80,5.490734385724091
+Threshold_50_15min,Congested state,17,18,79,5.422100205902539
+Threshold_50_15min,Congested state,18,19,68,4.667124227865477
+Threshold_50_15min,Congested state,19,20,51,3.5003431708991077
+LA_20drop_below40,Breakdown onset — temporal,5,6,4,40.0
+LA_20drop_below40,Breakdown onset — temporal,6,7,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,7,8,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,8,9,2,20.0
+LA_20drop_below40,Breakdown onset — temporal,9,10,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,10,11,2,20.0
+LA_20drop_below40,Breakdown onset — temporal,11,12,1,10.0
+LA_20drop_below40,Breakdown onset — temporal,12,13,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,13,14,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,14,15,1,10.0
+LA_20drop_below40,Breakdown onset — temporal,15,16,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,16,17,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,17,18,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,18,19,0,0.0
+LA_20drop_below40,Breakdown onset — temporal,19,20,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,5,6,1,14.285714285714285
+Caltrans_PeMS_spatial,Breakdown onset — spatial,6,7,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,7,8,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,8,9,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,9,10,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,10,11,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,11,12,1,14.285714285714285
+Caltrans_PeMS_spatial,Breakdown onset — spatial,12,13,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,13,14,2,28.57142857142857
+Caltrans_PeMS_spatial,Breakdown onset — spatial,14,15,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,15,16,2,28.57142857142857
+Caltrans_PeMS_spatial,Breakdown onset — spatial,16,17,1,14.285714285714285
+Caltrans_PeMS_spatial,Breakdown onset — spatial,17,18,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,18,19,0,0.0
+Caltrans_PeMS_spatial,Breakdown onset — spatial,19,20,0,0.0

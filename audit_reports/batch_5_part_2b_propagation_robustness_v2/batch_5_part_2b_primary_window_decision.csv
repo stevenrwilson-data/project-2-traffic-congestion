@@ -1,0 +1,7 @@
+corridor_episode_id,primary_window_minutes,stations_with_state,classification,stable_across_30_60_120
+1,60,0,localized/no propagation,True
+2,60,3,partial propagation,True
+3,60,4,corridor-wide propagation,False
+4,60,5,corridor-wide propagation,True
+5,60,3,partial propagation,False
+6,60,3,partial propagation,True

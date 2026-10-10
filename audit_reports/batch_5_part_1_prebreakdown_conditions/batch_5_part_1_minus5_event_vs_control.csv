@@ -1,0 +1,4 @@
+metric,event_n,event_median,event_q25,event_q75,control_n,control_median,control_q25,control_q75
+speed_mph,10,58.099999999999994,54.625,60.375,60,53.85,32.325,60.65
+flow_veh_5min,10,419.0,171.75,452.0,60,484.5,456.0,510.25
+occupancy_fraction,10,0.10875,0.055325,0.1251,60,0.14279999999999998,0.12587500000000001,0.20365

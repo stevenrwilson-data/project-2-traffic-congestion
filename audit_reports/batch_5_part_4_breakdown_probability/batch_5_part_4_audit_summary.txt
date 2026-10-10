@@ -1,0 +1,42 @@
+BATCH 5 — PART 4: BREAKDOWN PROBABILITY VS FLOW
+
+SUMMARY
+ eligible_free_flow_intervals  uncensored_breakdown_flows  censored_free_flow_intervals  stations  days  median_breakdown_flow_vphpl  min_breakdown_flow_vphpl  max_breakdown_flow_vphpl  maximum_plm_breakdown_probability
+                        80123                          10                         80113         5   118                       1257.0                       0.0                    1428.0                             0.0002
+
+OBSERVED PRE-BREAKDOWN FLOWS
+          timestamp  station_id  flow_veh_5min  lanes  flow_vphpl
+2026-02-01 11:05:00      716152          452.0    4.0      1356.0
+2026-03-19 10:35:00      716152          430.0    4.0      1290.0
+2026-04-30 10:15:00      716152          465.0    4.0      1395.0
+2026-02-27 07:55:00      717185          408.0    4.0      1224.0
+2026-03-02 05:15:00      717185          167.0    4.0       501.0
+2026-05-31 14:05:00      717185          452.0    4.0      1356.0
+2026-02-27 07:55:00      717190          476.0    4.0      1428.0
+2026-03-02 05:10:00      717190          186.0    4.0       558.0
+2026-03-02 05:15:00      717195            0.0    4.0         0.0
+2026-03-02 05:05:00      717198            2.0    4.0         6.0
+
+METHOD
+Each eligible observation is a 100%-observed five-minute station
+interval with current speed >= 40 mph and a contiguous next
+five-minute interval. The current interval is uncensored when the next
+interval is an LA temporal-rule onset; otherwise it is treated as
+censored, meaning capacity exceeded the observed flow.
+
+Flow is normalized to vehicles/hour/lane using station metadata lane
+counts. The nonparametric product-limit estimator is applied to the
+pooled five-station observations. Uncertainty is estimated by resampling
+whole calendar days with replacement.
+
+SOURCE NOTES
+FHWA stochastic breakdown probability / product-limit method
+https://ops.fhwa.dot.gov/publications/fhwahop19029/appc.htm
+FHWA describes freeway capacity as stochastic, classifies the interval immediately before breakdown as an uncensored capacity observation, treats free-flow intervals not followed by breakdown as censored observations, and estimates breakdown probability with the product-limit method.
+
+FHWA decision-parameter chapter
+https://ops.fhwa.dot.gov/publications/fhwahop19029/ch4.htm
+FHWA describes using current speed/flow conditions to estimate the probability of breakdown in the next interval and identifies the product-limit method as an established technique.
+
+PORTFOLIO FIGURE
+images/traffic_b5p4_breakdown_probability_plm.png

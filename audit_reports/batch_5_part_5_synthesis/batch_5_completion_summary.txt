@@ -1,0 +1,40 @@
+BATCH 5 — COMPLETE: CONGESTION DYNAMICS
+
+CANDIDATE KEY FINDINGS
+finding_id candidate_priority                                                                                                                                                                  finding                                                                                                                 evidence                     status
+     B5-F1                top                                                                     Corridor-level abrupt-breakdown episode construction is robust to the temporal clustering threshold.                                                       15, 30, and 45 minute clustering all produced 6 corridor episodes.                  supported
+     B5-F2               high                                                                    Most propagation classifications are stable, but some episodes depend on the allowed state-entry lag.                            4/6 episode classifications were unchanged across 30, 60, and 120 minute propagation windows.                  supported
+     B5-F3               high Five minutes before abrupt collapse, event conditions differ only modestly from matched controls and do not show a simple monotonic precursor in every traffic variable.                        Event/control medians: speed 58.10/61.95 mph; flow 419.0/443.5 veh/5min; occupancy 0.1087/0.1150.                 suggestive
+     B5-F4               high                                                                                        Sustained congestion episodes often persist well beyond the initial abrupt onset.                                                                     Median duration 60.0 min; 90th percentile 355.0 min.                  supported
+     B5-F5               high                      Breakdown probability can be estimated as a stochastic function of current per-lane flow rather than assuming one deterministic capacity threshold. 10 observed pre-breakdown flows were combined with 80113 censored free-flow intervals using the product-limit estimator. supported_methodologically
+
+QUESTION COVERAGE
+                                           question batch_5_section   status
+          What conditions precede abrupt breakdown?          Part 1 complete
+             How large is the immediate speed fall?          Part 1 complete
+     How does congestion propagate across stations?          Part 2 complete
+Are propagation conclusions robust to timing rules?         Part 2b complete
+           How long does sustained congestion last?          Part 3 complete
+     How does recovery proceed across the corridor?          Part 3 complete
+                 Does duration vary by time of day?          Part 3 complete
+     How does breakdown probability vary with flow?          Part 4 complete
+
+DURATION BY TIME PERIOD
+time_period  events  days  median_duration_minutes  q25_duration_minutes  q75_duration_minutes  p90_duration_minutes
+         AM     400    72                     50.0                  25.0                  70.0                  90.0
+     Midday     698   100                    170.0                  35.0                 335.0                 400.0
+         PM     359    88                     45.0                  25.0                 102.5                 160.0
+
+PRIMARY 60-MINUTE PROPAGATION CLASSIFICATION
+ corridor_episode_id  primary_window_minutes  stations_with_state            classification  stable_across_30_60_120
+                   1                      60                    0  localized/no propagation                     True
+                   2                      60                    3       partial propagation                     True
+                   3                      60                    4 corridor-wide propagation                    False
+                   4                      60                    5 corridor-wide propagation                     True
+                   5                      60                    3       partial propagation                    False
+                   6                      60                    3       partial propagation                     True
+
+STATUS
+Batch 5 Parts 1, 2, 2b, 3, and 4 are complete.
+Batch 6 can now focus on final robustness, influential dates/stations,
+limitations, and supported/suggestive/unsupported conclusions.

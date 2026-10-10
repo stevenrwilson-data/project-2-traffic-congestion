@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-10T01:05:41.770886+00:00",
+  "leave_one_out_relative_change_flag_pct": 20.0,
+  "onset_date_concentration_flag_pct": 30.0,
+  "top_onset_day_share_pct": 40.0,
+  "coverage_80_equals_100_rows": true,
+  "cluster_count_stable": true,
+  "propagation_stable_pct": 66.66666666666667,
+  "portfolio_figures": [
+    "images/traffic_b6_leave_one_out_duration_robustness.png",
+    "images/traffic_b6_duration_by_time_period.png",
+    "images/traffic_b6_abrupt_onset_concentration.png"
+  ]
+}

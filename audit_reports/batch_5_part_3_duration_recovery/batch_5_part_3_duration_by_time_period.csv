@@ -1,0 +1,4 @@
+time_period,events,days,median_duration_minutes,q25_duration_minutes,q75_duration_minutes,p90_duration_minutes
+AM,400,72,50.0,25.0,70.0,90.0
+Midday,698,100,170.0,35.0,335.0,400.0
+PM,359,88,45.0,25.0,102.5,160.0

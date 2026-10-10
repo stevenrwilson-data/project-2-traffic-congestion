@@ -1,0 +1,22 @@
+BATCH 2 — STATION METADATA AND CORRIDOR CONSTRUCTION (CORRECTED)
+Batch 1 candidate stations: 480
+Historical metadata rows: 4,888
+District 7 metadata rows: 4,888
+District 7 ML metadata rows: 1,916
+Physical ML stations with valid geography: 1,914
+Physical ML stations lacking required geography: 2
+Candidate stations matched to historical ML metadata: 480
+Candidate stations unmatched: 0
+Batch 1 / metadata route-label mismatches: 480
+Freeway/direction combinations represented physically: 45
+Physically contiguous candidate runs: 238
+Isolated one-station candidate runs: 131
+Corridor runs with at least 4 stations: 31
+
+INTERPRETATION AND DECISION GATE
+Physical adjacency is defined using all historical District 7 ML stations.
+Candidate corridors cannot jump across an intervening noncandidate ML detector.
+Travel-direction upstream/downstream IDs are derived from freeway direction and physical postmile order.
+Corridor review score is only a transparent ordering aid, not a statistical estimator.
+No primary corridor has been automatically selected.
+Next decision: review the strongest physically contiguous corridors and choose the primary corridor for Batch 3.

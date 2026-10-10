@@ -1,0 +1,12 @@
+event_id,method,station_id,start_time,end_time,duration_minutes,intervals,onset_observed,recovery_observed,left_censored,right_censored,start_speed_mph,minimum_speed_mph,prebreakdown_speed_mph,prebreakdown_flow_veh_5min,prebreakdown_occupancy_fraction,speed_drop_mph,upstream_station_id,upstream_gap_miles,event_date,start_hour,concept_role
+329,Threshold_50_15min,716152,2026-02-27 07:50:00,2026-02-27 09:15:00,90,18,True,True,False,False,44.5,38.7,50.5,493.0,0.2278,,,,2026-02-27,7.833333333333333,Congested state
+330,LA_20drop_below40,717185,2026-02-27 08:00:00,2026-02-27 09:35:00,100,20,True,True,False,False,33.6,8.6,57.1,408.0,0.106,23.5,,,2026-02-27,8.0,Breakdown onset — temporal
+331,Threshold_50_15min,717185,2026-02-27 08:00:00,2026-02-27 09:40:00,105,21,True,True,False,False,33.6,8.6,57.1,408.0,0.106,,,,2026-02-27,8.0,Congested state
+332,LA_20drop_below40,717190,2026-02-27 08:00:00,2026-02-27 09:35:00,100,20,True,True,False,False,33.7,9.9,58.3,476.0,0.1255,24.59999999999999,,,2026-02-27,8.0,Breakdown onset — temporal
+333,Threshold_50_15min,717190,2026-02-27 08:00:00,2026-02-27 09:40:00,105,21,True,True,False,False,33.7,9.9,58.3,476.0,0.1255,,,,2026-02-27,8.0,Congested state
+334,Threshold_50_15min,717185,2026-02-27 13:05:00,2026-02-27 19:55:00,415,83,True,False,False,True,47.6,25.0,59.8,300.0,0.0632,,,,2026-02-27,13.083333333333334,Congested state
+335,Threshold_50_15min,717190,2026-02-27 13:10:00,2026-02-27 19:55:00,410,82,True,False,False,True,35.3,20.4,50.1,436.0,0.1756,,,,2026-02-27,13.166666666666666,Congested state
+336,Threshold_50_15min,717195,2026-02-27 13:10:00,2026-02-27 19:55:00,410,82,True,False,False,True,48.9,36.3,58.7,281.0,0.0635,,,,2026-02-27,13.166666666666666,Congested state
+337,Threshold_50_15min,717198,2026-02-27 13:20:00,2026-02-27 19:55:00,400,80,True,False,False,True,48.5,41.6,50.2,480.0,0.1272,,,,2026-02-27,13.333333333333334,Congested state
+338,Caltrans_PeMS_spatial,717195,2026-02-27 13:25:00,2026-02-27 14:45:00,85,17,True,True,False,False,40.5,39.4,,,,,716152.0,0.5600000000000023,2026-02-27,13.416666666666666,Breakdown onset — spatial
+339,Threshold_50_15min,716152,2026-02-27 14:40:00,2026-02-27 19:55:00,320,64,True,False,False,True,48.8,37.2,59.4,420.0,0.1133,,,,2026-02-27,14.666666666666666,Congested state

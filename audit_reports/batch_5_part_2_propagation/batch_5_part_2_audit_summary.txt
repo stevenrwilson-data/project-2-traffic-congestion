@@ -1,0 +1,83 @@
+BATCH 5 — PART 2: CORRIDOR PROPAGATION
+
+Primary abrupt-onset method: LA_20drop_below40
+Congestion-state method: Threshold_50_15min
+LA onsets available: 10
+Primary onset-cluster gap: 30 minutes
+Corridor-level episodes: 6
+
+CLUSTER SENSITIVITY
+ cluster_gap_minutes  corridor_episodes  episodes_with_multiple_la_onsets  maximum_la_onsets_in_episode
+                  15                  6                                 2                             4
+                  30                  6                                 2                             4
+                  45                  6                                 2                             4
+
+CORRIDOR EPISODES
+ corridor_episode_id episode_date    first_onset_time     last_onset_time  onset_span_minutes  la_onsets_in_episode  stations_with_la_onset  first_onset_station_id   station_ids_with_la_onset
+                   1   2026-02-01 2026-02-01 11:10:00 2026-02-01 11:10:00                 0.0                     1                       1                  716152                      716152
+                   2   2026-02-27 2026-02-27 08:00:00 2026-02-27 08:00:00                 0.0                     2                       2                  717185               717185|717190
+                   3   2026-03-02 2026-03-02 05:10:00 2026-03-02 05:20:00                10.0                     4                       4                  717198 717198|717190|717185|717195
+                   4   2026-03-19 2026-03-19 10:40:00 2026-03-19 10:40:00                 0.0                     1                       1                  716152                      716152
+                   5   2026-04-30 2026-04-30 10:20:00 2026-04-30 10:20:00                 0.0                     1                       1                  716152                      716152
+                   6   2026-05-31 2026-05-31 14:10:00 2026-05-31 14:10:00                 0.0                     1                       1                  717185                      717185
+
+STATE ENTRY BY STATION
+ corridor_episode_id episode_date         anchor_time  station_id  travel_order station_name  state_found    state_start_time      state_end_time  state_entry_lag_minutes  state_duration_minutes          match_type
+                   1   2026-02-01 2026-02-01 11:10:00      717185             1    VINCENT 1        False                 NaT                 NaT                      NaN                     NaN                none
+                   1   2026-02-01 2026-02-01 11:10:00      717190             2    VINCENT 2        False                 NaT                 NaT                      NaN                     NaN                none
+                   1   2026-02-01 2026-02-01 11:10:00      716152             3   LARK ELLEN        False                 NaT                 NaT                      NaN                     NaN                none
+                   1   2026-02-01 2026-02-01 11:10:00      717195             4      AZUSA 1        False                 NaT                 NaT                      NaN                     NaN                none
+                   1   2026-02-01 2026-02-01 11:10:00      717198             5      AZUSA 2        False                 NaT                 NaT                      NaN                     NaN                none
+                   2   2026-02-27 2026-02-27 08:00:00      717185             1    VINCENT 1         True 2026-02-27 08:00:00 2026-02-27 09:40:00                      0.0                   105.0     contains_anchor
+                   2   2026-02-27 2026-02-27 08:00:00      717190             2    VINCENT 2         True 2026-02-27 08:00:00 2026-02-27 09:40:00                      0.0                   105.0     contains_anchor
+                   2   2026-02-27 2026-02-27 08:00:00      716152             3   LARK ELLEN         True 2026-02-27 07:50:00 2026-02-27 09:15:00                    -10.0                    90.0     contains_anchor
+                   2   2026-02-27 2026-02-27 08:00:00      717195             4      AZUSA 1        False                 NaT                 NaT                      NaN                     NaN                none
+                   2   2026-02-27 2026-02-27 08:00:00      717198             5      AZUSA 2        False                 NaT                 NaT                      NaN                     NaN                none
+                   3   2026-03-02 2026-03-02 05:10:00      717185             1    VINCENT 1         True 2026-03-02 05:20:00 2026-03-02 06:15:00                     10.0                    60.0 nearest_state_start
+                   3   2026-03-02 2026-03-02 05:10:00      717190             2    VINCENT 2         True 2026-03-02 05:15:00 2026-03-02 05:40:00                      5.0                    30.0 nearest_state_start
+                   3   2026-03-02 2026-03-02 05:10:00      716152             3   LARK ELLEN        False                 NaT                 NaT                      NaN                     NaN                none
+                   3   2026-03-02 2026-03-02 05:10:00      717195             4      AZUSA 1         True 2026-03-02 06:00:00 2026-03-02 06:15:00                     50.0                    20.0 nearest_state_start
+                   3   2026-03-02 2026-03-02 05:10:00      717198             5      AZUSA 2         True 2026-03-02 05:10:00 2026-03-02 05:20:00                      0.0                    15.0     contains_anchor
+                   4   2026-03-19 2026-03-19 10:40:00      717185             1    VINCENT 1         True 2026-03-19 10:45:00 2026-03-19 11:05:00                      5.0                    25.0 nearest_state_start
+                   4   2026-03-19 2026-03-19 10:40:00      717190             2    VINCENT 2         True 2026-03-19 10:45:00 2026-03-19 11:10:00                      5.0                    30.0 nearest_state_start
+                   4   2026-03-19 2026-03-19 10:40:00      716152             3   LARK ELLEN         True 2026-03-19 10:40:00 2026-03-19 11:25:00                      0.0                    50.0     contains_anchor
+                   4   2026-03-19 2026-03-19 10:40:00      717195             4      AZUSA 1         True 2026-03-19 10:35:00 2026-03-19 11:25:00                     -5.0                    55.0     contains_anchor
+                   4   2026-03-19 2026-03-19 10:40:00      717198             5      AZUSA 2         True 2026-03-19 10:35:00 2026-03-19 11:25:00                     -5.0                    55.0     contains_anchor
+                   5   2026-04-30 2026-04-30 10:20:00      717185             1    VINCENT 1         True 2026-04-30 10:20:00 2026-04-30 10:40:00                      0.0                    25.0     contains_anchor
+                   5   2026-04-30 2026-04-30 10:20:00      717190             2    VINCENT 2         True 2026-04-30 10:20:00 2026-04-30 10:35:00                      0.0                    20.0     contains_anchor
+                   5   2026-04-30 2026-04-30 10:20:00      716152             3   LARK ELLEN         True 2026-04-30 10:20:00 2026-04-30 10:35:00                      0.0                    20.0     contains_anchor
+                   5   2026-04-30 2026-04-30 10:20:00      717195             4      AZUSA 1         True 2026-04-30 12:10:00 2026-04-30 16:15:00                    110.0                   250.0 nearest_state_start
+                   5   2026-04-30 2026-04-30 10:20:00      717198             5      AZUSA 2         True 2026-04-30 12:10:00 2026-04-30 13:15:00                    110.0                    70.0 nearest_state_start
+                   6   2026-05-31 2026-05-31 14:10:00      717185             1    VINCENT 1         True 2026-05-31 14:10:00 2026-05-31 14:35:00                      0.0                    30.0     contains_anchor
+                   6   2026-05-31 2026-05-31 14:10:00      717190             2    VINCENT 2         True 2026-05-31 14:05:00 2026-05-31 15:30:00                     -5.0                    90.0     contains_anchor
+                   6   2026-05-31 2026-05-31 14:10:00      716152             3   LARK ELLEN         True 2026-05-31 14:05:00 2026-05-31 15:30:00                     -5.0                    90.0     contains_anchor
+                   6   2026-05-31 2026-05-31 14:10:00      717195             4      AZUSA 1        False                 NaT                 NaT                      NaN                     NaN                none
+                   6   2026-05-31 2026-05-31 14:10:00      717198             5      AZUSA 2        False                 NaT                 NaT                      NaN                     NaN                none
+
+EPISODE PROPAGATION SUMMARY
+ corridor_episode_id  stations_with_state  first_state_station_id  first_state_travel_order  last_state_station_id  last_state_travel_order  state_entry_span_minutes  travel_order_lag_correlation
+                   1                    0                     NaN                       NaN                    NaN                      NaN                       NaN                           NaN
+                   2                    3                716152.0                       3.0               717190.0                      2.0                      10.0                        -0.866
+                   3                    4                717198.0                       5.0               717195.0                      4.0                      50.0                         0.200
+                   4                    5                717195.0                       4.0               717190.0                      2.0                      10.0                        -0.949
+                   5                    5                717185.0                       1.0               717198.0                      5.0                     110.0                         0.866
+                   6                    3                717190.0                       2.0               717185.0                      1.0                       5.0                        -0.866
+
+METHOD
+LA temporal onsets on the same date are grouped into corridor-level
+episodes when consecutive onset times are no more than the configured
+gap apart. Sensitivity at 15, 30, and 45 minutes is preserved.
+For each episode and each station, the sustained 50 mph + 15 minute
+state event containing the episode anchor is preferred. If none contains
+the anchor, the nearest state start within the configured before/after
+window is used.
+
+INTERPRETATION
+Positive lag means sustained congestion begins after the first abrupt
+LA-rule onset in that corridor episode. Negative lag means the station
+was already in sustained congestion before that abrupt onset.
+
+PORTFOLIO FIGURES
+images/traffic_b5p2_state_entry_lags.png
+images/traffic_b5p2_propagation_lag_heatmap.png
+images/traffic_b5p2_episode_speed_heatmaps.png

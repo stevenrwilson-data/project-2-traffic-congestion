@@ -1,0 +1,45 @@
+BATCH 4 — PART 2: CONGESTION STATE VS BREAKDOWN ONSET
+
+PURPOSE
+Preserve Batch 4 Part 1 intact while formalizing the distinction
+between sustained congestion state and abrupt breakdown onset.
+
+PART 1 EVIDENCE RETAINED
+               method  events  stations_with_events  days_with_events  median_duration_minutes  p90_duration_minutes  median_start_hour
+   Threshold_50_15min    1457                     5               103                     60.0                 355.0             13.167
+    LA_20drop_below40      10                     5                 6                     27.5                 100.0              8.000
+Caltrans_PeMS_spatial       7                     1                 5                     60.0                  89.0             13.750
+
+PAIRWISE PART 1 AGREEMENT RETAINED
+          method_a              method_b  events_a  events_b  matched_events_within_10min_same_station  event_onset_jaccard_approx
+Threshold_50_15min     LA_20drop_below40      1457        10                                         8                       0.005
+Threshold_50_15min Caltrans_PeMS_spatial      1457         7                                         1                       0.001
+ LA_20drop_below40 Caltrans_PeMS_spatial        10         7                                         0                       0.000
+
+THRESHOLD SENSITIVITY RETAINED
+ threshold_mph  events  days_with_events  median_duration_minutes
+            40    1378               100                     35.0
+            50    1457               103                     60.0
+            55    1371               112                     75.0
+
+DECISION
+1. 50 mph + 15 minutes is retained as the primary congested-state measure.
+2. LA 20-mph drop + <40 mph is retained as a temporal breakdown-onset measure.
+3. Caltrans PeMS spatial logic is retained as a spatial breakdown-onset measure.
+4. No Part 1 outputs are deleted, replaced, or re-labeled retroactively.
+
+WHY
+The three definitions identify sharply different event sets and show
+very low pairwise onset agreement. The evidence therefore supports
+treating sustained congestion and abrupt breakdown onset as related
+but distinct analytical concepts.
+
+DOWNSTREAM PLAN
+Batch 5 should analyze congested-state duration/recovery using the
+50 mph + 15 min state definition, while precursor and onset analyses
+should use the LA temporal rule as the primary onset definition and
+the Caltrans spatial rule as a robustness/spatial bottleneck check.
+
+PORTFOLIO FIGURES
+images/traffic_b4_part2_onset_timing_normalized.png
+images/traffic_b4_part2_state_vs_onset_counts.png

@@ -1,0 +1,49 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-10T00:16:50.546867+00:00",
+  "parts_complete": [
+    "Part 1 pre-breakdown conditions",
+    "Part 2 propagation",
+    "Part 2b propagation robustness",
+    "Part 3 duration and recovery",
+    "Part 4 breakdown probability vs flow",
+    "Part 5 synthesis"
+  ],
+  "candidate_key_findings": [
+    {
+      "finding_id": "B5-F1",
+      "candidate_priority": "top",
+      "finding": "Corridor-level abrupt-breakdown episode construction is robust to the temporal clustering threshold.",
+      "evidence": "15, 30, and 45 minute clustering all produced 6 corridor episodes.",
+      "status": "supported"
+    },
+    {
+      "finding_id": "B5-F2",
+      "candidate_priority": "high",
+      "finding": "Most propagation classifications are stable, but some episodes depend on the allowed state-entry lag.",
+      "evidence": "4/6 episode classifications were unchanged across 30, 60, and 120 minute propagation windows.",
+      "status": "supported"
+    },
+    {
+      "finding_id": "B5-F3",
+      "candidate_priority": "high",
+      "finding": "Five minutes before abrupt collapse, event conditions differ only modestly from matched controls and do not show a simple monotonic precursor in every traffic variable.",
+      "evidence": "Event/control medians: speed 58.10/61.95 mph; flow 419.0/443.5 veh/5min; occupancy 0.1087/0.1150.",
+      "status": "suggestive"
+    },
+    {
+      "finding_id": "B5-F4",
+      "candidate_priority": "high",
+      "finding": "Sustained congestion episodes often persist well beyond the initial abrupt onset.",
+      "evidence": "Median duration 60.0 min; 90th percentile 355.0 min.",
+      "status": "supported"
+    },
+    {
+      "finding_id": "B5-F5",
+      "candidate_priority": "high",
+      "finding": "Breakdown probability can be estimated as a stochastic function of current per-lane flow rather than assuming one deterministic capacity threshold.",
+      "evidence": "10 observed pre-breakdown flows were combined with 80113 censored free-flow intervals using the product-limit estimator.",
+      "status": "supported_methodologically"
+    }
+  ]
+}

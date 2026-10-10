@@ -1,0 +1,10 @@
+window_minutes,classification,episodes
+30,corridor-wide propagation,1
+30,localized/no propagation,1
+30,partial propagation,4
+60,corridor-wide propagation,2
+60,localized/no propagation,1
+60,partial propagation,3
+120,corridor-wide propagation,3
+120,localized/no propagation,1
+120,partial propagation,2

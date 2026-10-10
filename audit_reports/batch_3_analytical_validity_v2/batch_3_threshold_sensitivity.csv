@@ -1,0 +1,5 @@
+threshold,rows_retained,pct_all_corridor_rows,stations_with_any_rows,days_with_any_rows,speed_valid_pct_within_threshold,flow_valid_pct_within_threshold,occupancy_valid_pct_within_threshold,days_with_simultaneous_data,simultaneous_timestamps,simultaneous_hours
+40,166640,96.46868125506542,5,118,100.0,100.0,100.0,113,32176,2681.3333333333335
+60,166352,96.30195669792752,5,118,100.0,100.0,100.0,113,32176,2681.3333333333335
+80,164657,95.32071321060553,5,118,100.0,100.0,100.0,106,30481,2540.0833333333335
+100,164657,95.32071321060553,5,118,100.0,100.0,100.0,106,30481,2540.0833333333335

@@ -1,0 +1,7 @@
+corridor_episode_id,30,60,120,classification_stable
+1,localized/no propagation,localized/no propagation,localized/no propagation,True
+2,partial propagation,partial propagation,partial propagation,True
+3,partial propagation,corridor-wide propagation,corridor-wide propagation,False
+4,corridor-wide propagation,corridor-wide propagation,corridor-wide propagation,True
+5,partial propagation,partial propagation,corridor-wide propagation,False
+6,partial propagation,partial propagation,partial propagation,True

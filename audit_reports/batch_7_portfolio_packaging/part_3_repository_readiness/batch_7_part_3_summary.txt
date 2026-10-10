@@ -1,0 +1,22 @@
+              item  exists
+prepare_traffic.py    True
+         README.md    True
+        METHODS.md    True
+        RESULTS.md    True
+    LIMITATIONS.md    True
+        FIGURES.md    True
+    audit_reports/    True
+           images/    True
+portfolio_figures/    True
+
+                             item  complete
+                Analysis complete      True
+                 README generated      True
+                Methods generated      True
+                Results generated      True
+            Limitations generated      True
+           Figure guide generated      True
+Portfolio figure folder assembled      True
+           Personal-language edit     False
+                  Git commit/push     False
+       Portfolio-site integration     False

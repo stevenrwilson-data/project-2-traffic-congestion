@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T19:04:56.381153+00:00",
+  "part_1_source_folder": "audit_reports/batch_4_breakdown_detection_v2",
+  "part_2_output_folder": "audit_reports/batch_4_part_2_concept_separation",
+  "part_1_outputs_modified": false,
+  "congested_state_method": "Threshold_50_15min",
+  "breakdown_onset_primary_temporal_method": "LA_20drop_below40",
+  "breakdown_onset_spatial_robustness_method": "Caltrans_PeMS_spatial",
+  "example_date": "2026-02-27",
+  "portfolio_figures": [
+    "images/traffic_b4_part2_onset_timing_normalized.png",
+    "images/traffic_b4_part2_state_vs_onset_counts.png"
+  ]
+}

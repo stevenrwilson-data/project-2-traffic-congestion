@@ -1,0 +1,3 @@
+ID,Fwy,Dir,District,County,City,State_PM,Abs_PM,Latitude,Longitude,Length,Type,Lanes,Name,User_ID_1,User_ID_2,User_ID_3,User_ID_4,valid_geography
+760349,105,E,7,37,52526.0,,18.13,,,0.43,ML,2,LEIBACHER,4813,,,,False
+760361,105,W,7,37,52526.0,,18.13,,,0.13,ML,2,LEIBACHER,4813,,,,False

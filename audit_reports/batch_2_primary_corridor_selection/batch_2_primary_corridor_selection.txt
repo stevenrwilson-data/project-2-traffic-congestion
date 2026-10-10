@@ -1,0 +1,24 @@
+BATCH 2 — PRIMARY CORRIDOR SELECTION
+Selected corridor: Fwy_10_E_physical_run_6
+Freeway/direction: 10 E
+Stations: 5
+Postmile span: 1.20 miles
+Max physical station gap: 0.56 miles
+Weighted >=80% coverage: 95.32%
+Weakest station >=80% coverage: 91.57%
+Weekday simultaneous all-station >=80% coverage: 89.32%
+Weekday station intervals below existing speed threshold: 23.08%
+Weekday all-station-covered timestamps with any low-speed station: 30.02%
+Weekdays with any simultaneous low-speed evidence: 75
+
+SELECTION METHODOLOGY
+Candidate set: top five physically contiguous corridors from Batch 2 v3 quality review.
+Viability gate: corridor must show weekday low-speed activity and at least some simultaneous >=80% coverage across every station.
+Primary ranking: highest minimum station >=80% coverage.
+Tie breakers: simultaneous corridor >=80% coverage, weekdays with low-speed activity, station count, spatial span, then original quality-review rank.
+The minimum-station rule prevents a corridor average from hiding a broken middle detector.
+The low-speed requirement prevents selecting a pristine corridor that provides little breakdown behavior to study.
+No new congestion-speed threshold is introduced; this step reuses the existing below_speed_threshold flag.
+
+DECISION
+Fwy_10_E_physical_run_6 is locked as the primary corridor for Batch 3.

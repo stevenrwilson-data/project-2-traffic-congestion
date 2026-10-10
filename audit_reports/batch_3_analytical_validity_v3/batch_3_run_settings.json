@@ -1,0 +1,43 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T18:25:38.504700+00:00",
+  "selected_corridor": "Fwy_10_E_physical_run_6",
+  "station_ids": [
+    716152,
+    717185,
+    717190,
+    717195,
+    717198
+  ],
+  "station_count": 5,
+  "start_date": "2026-02-01",
+  "end_date": "2026-05-31",
+  "thresholds": [
+    40,
+    60,
+    80,
+    100
+  ],
+  "selection_adopted": false,
+  "coverage_bands": [
+    "0",
+    ">0-<40",
+    "40-<80",
+    "80-<100",
+    "100",
+    "invalid"
+  ],
+  "lane_slot_rule": "Physical lane slots are defined from the historical metadata Lanes count for each station. Lane-number fields above that count are treated as padded schema slots and excluded even when they contain zero placeholders.",
+  "repetition_rule": "Exact repeated values are compared only across consecutive five-minute records from the same station.",
+  "zero_vs_100_rule": "0%- and 100%-observed rows are compared within the same selected stations.",
+  "rows_audited": 172740,
+  "stations_audited": 5,
+  "final_threshold_adopted": null,
+  "portfolio_figures": [
+    "images/traffic_b3_threshold_sensitivity.png",
+    "images/traffic_b3_weakest_station_threshold.png",
+    "images/traffic_b3_measurements_by_coverage.png",
+    "images/traffic_b3_exact_repeat_diagnostic.png",
+    "images/traffic_b3_lane_consistency.png"
+  ]
+}

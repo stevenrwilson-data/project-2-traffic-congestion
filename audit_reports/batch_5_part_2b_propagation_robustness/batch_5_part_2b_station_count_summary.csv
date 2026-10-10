@@ -1,0 +1,4 @@
+window_minutes,median_stations_with_state,min_stations_with_state,max_stations_with_state
+30,3.0,0,5
+60,3.0,0,5
+120,3.5,0,5

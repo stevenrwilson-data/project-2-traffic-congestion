@@ -1,0 +1,7 @@
+corridor_episode_id,stations_with_state,first_state_station_id,first_state_travel_order,last_state_station_id,last_state_travel_order,state_entry_span_minutes,travel_order_lag_correlation
+1,0,,,,,,
+2,3,716152.0,3.0,717190.0,2.0,10.0,-0.8660254037844386
+3,4,717198.0,5.0,717195.0,4.0,50.0,0.19960119601394988
+4,5,717195.0,4.0,717190.0,2.0,10.0,-0.9486832980505138
+5,5,717185.0,1.0,717198.0,5.0,110.0,0.8660254037844387
+6,3,717190.0,2.0,717185.0,1.0,5.0,-0.8660254037844386

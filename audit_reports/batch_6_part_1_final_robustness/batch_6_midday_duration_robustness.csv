@@ -1,0 +1,2 @@
+baseline_midday_minus_max_am_pm_minutes,minimum_gap_leave_one_station_out_minutes,minimum_gap_leave_one_date_out_minutes,midday_longer_after_every_station_exclusion,midday_longer_after_every_date_exclusion
+120.0,105.0,120.0,True,True

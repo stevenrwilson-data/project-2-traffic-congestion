@@ -1,0 +1,6 @@
+finding,status,basis
+Sustained congestion and abrupt breakdown are distinct operational phenomena.,SUPPORTED,"1,457 sustained-state events versus 10 abrupt temporal onsets and 7 spatial bottleneck events. The temporal-onset sample is also checked for filtered-data continuity at t-5 and t."
+The 10 abrupt onsets form six same-day corridor episodes.,DESCRIPTIVE_NOT_ROBUSTNESS,"The 15-minute rule does not split any multi-onset date, so 15/30/45-minute invariance is not a strong robustness test."
+Episodes beginning 10:00–15:00 last longer than AM or PM starts.,SUPPORTED_AFTER_FRAGMENTATION_TEST,Full-day recovery context plus 0/5/10/15-minute short-gap merging sensitivity.
+A recurring local bottleneck signature can be ranked across adjacent station pairs.,SUPPORTED_DIAGNOSTIC,Top pair: 716152 → 717195; Lark Ellen → Azusa 1 = True.
+The original product-limit probability chart remains excluded.,EXCLUDE,"Upstream queued flows were not appropriate capacity measurements; the downstream discharge audit is more defensible, but ten abrupt events remain too sparse."

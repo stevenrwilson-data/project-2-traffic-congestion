@@ -1,0 +1,24 @@
+BATCH 2 — STATION METADATA AND CORRIDOR CONSTRUCTION
+Batch 1 candidate stations: 480
+Historical metadata rows: 4,888
+District 7 metadata rows: 4,888
+District 7 ML metadata rows: 1,916
+Candidate stations matched to historical ML metadata: 480
+Candidate stations unmatched: 0
+Matched candidates with valid geography: 480
+Matched candidates lacking required geography: 0
+Freeway/direction combinations represented: 36
+
+CORRIDOR SENSITIVITY
+Diagnostic maximum-gap definitions tested: 1 mi, 2 mi, 3 mi, 5 mi
+Minimum stations for corridor review: 4
+Corridor candidates meeting review size: 167
+
+INTERPRETATION AND DECISION GATE
+Metadata snapshot covers the Feb-May 2026 study window.
+Candidate station order is based on freeway, direction, and absolute postmile.
+Neighbor IDs describe nearest ever-positive candidate stations, not necessarily every physical PeMS detector.
+Corridor gap thresholds are sensitivity definitions, not scientific traffic-flow thresholds.
+No primary corridor has been automatically selected.
+Use corridor stability, station count, spatial span, and Batch 1 observation quality together.
+Next decision: choose the primary freeway/direction corridor for Batch 3 data-validity analysis.

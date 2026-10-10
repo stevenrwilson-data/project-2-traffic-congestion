@@ -1,0 +1,6 @@
+station_id,events,days,median_duration_minutes,q25_duration_minutes,q75_duration_minutes,p90_duration_minutes,travel_order,Name
+717185,254,101,80.0,35.0,285.0,388.5000000000001,1,VINCENT 1
+717190,251,101,80.0,35.0,297.5,390.0,2,VINCENT 2
+716152,243,94,80.0,32.5,295.0,370.0,3,LARK ELLEN
+717195,356,97,50.0,25.0,116.25,240.0,4,AZUSA 1
+717198,353,101,50.0,25.0,120.0,248.0000000000001,5,AZUSA 2

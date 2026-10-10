@@ -1,0 +1,20 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T08:09:54.291186+00:00",
+  "source_folder": "audit_reports/batch_2_corridor_construction_v3",
+  "source_review": "audit_reports/batch_2_corridor_construction_v3/batch_2_top_corridor_traffic_review.csv",
+  "selected_corridor": "Fwy_10_E_physical_run_6",
+  "candidate_corridors_reviewed": 5,
+  "viable_corridors": 2,
+  "selection_rule": [
+    "require weekday_days_with_any_simultaneous_low_speed > 0",
+    "require weekday_simultaneous_ge80_pct_expected > 0",
+    "maximize minimum_station_ge80_pct",
+    "then maximize weekday_simultaneous_ge80_pct_expected",
+    "then maximize weekday_days_with_any_simultaneous_low_speed",
+    "then maximize station_count",
+    "then maximize postmile_span",
+    "then prefer lower original quality_review_rank"
+  ],
+  "selection_adopted": true
+}

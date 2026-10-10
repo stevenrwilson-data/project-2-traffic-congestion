@@ -1,0 +1,4 @@
+threshold_mph,events,days_with_events,median_duration_minutes
+40,1378,100,35.0
+50,1457,103,60.0
+55,1371,112,75.0

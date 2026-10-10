@@ -1,0 +1,2 @@
+top_ranked_upstream_station,top_ranked_downstream_station,abrupt_onsets,onsets_with_free_downstream_discharge_station,median_discharge_flow_vphpl_when_free,minimum_discharge_flow_vphpl_when_free,maximum_discharge_flow_vphpl_when_free,plm_revival_recommended
+716152,717195,10,9,1200.0,0.0,1698.0,False

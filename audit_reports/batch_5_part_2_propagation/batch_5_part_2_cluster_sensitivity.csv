@@ -1,0 +1,4 @@
+cluster_gap_minutes,corridor_episodes,episodes_with_multiple_la_onsets,maximum_la_onsets_in_episode
+15,6,2,4
+30,6,2,4
+45,6,2,4

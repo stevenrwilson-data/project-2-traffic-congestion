@@ -1,0 +1,2 @@
+context_start_hour,core_start_hour,core_end_hour,context_end_hour,extended_context_rows,core_rows_reproduced,batch_4_core_rows,boundary_context_rows_added,core_exact_match
+4.5,5.0,20.0,20.5,109797,102921,102921,6876,True

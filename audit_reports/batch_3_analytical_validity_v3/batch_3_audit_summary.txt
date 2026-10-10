@@ -1,0 +1,47 @@
+BATCH 3 — ANALYTICAL DATA VALIDITY
+Primary corridor: Fwy_10_E_physical_run_6
+Stations: 5
+Rows audited: 172,740
+
+THRESHOLD SENSITIVITY
+ threshold  rows_retained  pct_all_corridor_rows  stations_with_any_rows  days_with_any_rows  speed_valid_pct_within_threshold  flow_valid_pct_within_threshold  occupancy_valid_pct_within_threshold  days_with_simultaneous_data  simultaneous_timestamps  simultaneous_hours  minimum_station_eligible_pct  median_station_eligible_pct  minimum_station_days_with_any_eligible
+        40         166640                 96.469                       5                 118                             100.0                            100.0                                 100.0                          113                    32176            2681.333                        93.134                       97.302                                     113
+        60         166352                 96.302                       5                 118                             100.0                            100.0                                 100.0                          113                    32176            2681.333                        93.134                       97.302                                     113
+        80         164657                 95.321                       5                 118                             100.0                            100.0                                 100.0                          106                    30481            2540.083                        91.571                       97.299                                     110
+       100         164657                 95.321                       5                 118                             100.0                            100.0                                 100.0                          106                    30481            2540.083                        91.571                       97.299                                     110
+
+COVERAGE-BAND MEASURE VALIDITY
+coverage_band   rows  pct_of_corridor_rows  speed_valid_pct  flow_valid_pct  occupancy_valid_pct  all_measures_valid_pct  median_speed_mph  median_flow_veh_5min  median_occupancy_fraction  speed_mph_q10  speed_mph_q90  flow_veh_5min_q10  flow_veh_5min_q90  occupancy_fraction_q10  occupancy_fraction_q90
+            0   5812                 3.365            100.0           100.0                100.0                   100.0             62.20                 408.0                      0.088          39.91           68.4              113.0              512.0                   0.026                   0.183
+       >0-<40    288                 0.167            100.0           100.0                100.0                   100.0             48.95                 385.5                      0.147          32.18           65.4              121.7              471.3                   0.041                   0.233
+       40-<80   1983                 1.148            100.0           100.0                100.0                   100.0             63.10                 409.0                      0.091          42.20           67.8              109.0              523.0                   0.030                   0.165
+      80-<100      0                   NaN              NaN             NaN                  NaN                     NaN               NaN                   NaN                        NaN            NaN            NaN                NaN                NaN                     NaN                     NaN
+          100 164657                95.321            100.0           100.0                100.0                   100.0             63.70                 408.0                      0.086          36.10           69.4               95.0              520.0                   0.021                   0.203
+      invalid      0                   NaN              NaN             NaN                  NaN                     NaN               NaN                   NaN                        NaN            NaN            NaN                NaN                NaN                     NaN                     NaN
+
+EXACT REPEAT RATES
+coverage_band  comparable_consecutive_rows  repeat_speed_pct  repeat_flow_pct  repeat_occupancy_pct  repeat_triplet_pct
+            0                         5812             3.441            2.134                 0.637               0.000
+       >0-<40                          288             2.083            1.389                 0.000               0.000
+       40-<80                         1983             2.673            1.664                 0.555               0.000
+      80-<100                            0               NaN              NaN                   NaN                 NaN
+          100                       164647             3.513            2.805                 1.859               1.046
+      invalid                            0               NaN              NaN                   NaN                 NaN
+
+LANE CONSISTENCY SUMMARY
+  rows  rows_with_physical_lane_slots  median_physical_lane_slots  median_abs_station_minus_lane_positive_pct  pct_rows_exact_station_lane_positive_match
+172740                         172740                         4.0                                         0.0                                       100.0
+
+INTERPRETATION AND DECISION GATE
+0%-observed rows are preserved for same-station comparison; they are not treated as analytically valid merely because measurements are populated.
+Lane slots above each station metadata Lanes count are treated as padded schema slots and excluded from detector counts.
+Exact repeated measurements are diagnostic evidence only; repetition does not by itself prove imputation.
+Threshold comparison emphasizes 80% versus 100%, with 40% and 60% retained as sensitivity checks.
+Final coverage threshold is not yet adopted. Select it from validity, weakest-station retention, and simultaneous corridor exposure.
+
+PORTFOLIO FIGURES
+images/traffic_b3_threshold_sensitivity.png
+images/traffic_b3_weakest_station_threshold.png
+images/traffic_b3_measurements_by_coverage.png
+images/traffic_b3_exact_repeat_diagnostic.png
+images/traffic_b3_lane_consistency.png

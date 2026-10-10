@@ -1,0 +1,31 @@
+{
+  "status": "incomplete",
+  "created_utc": "2026-10-09T05:42:42.499906+00:00",
+  "input": "traffic_prepared",
+  "start_date": "2026-02-01",
+  "end_date": "2026-05-31",
+  "scope": "ML",
+  "thresholds": [
+    0,
+    5,
+    20,
+    40,
+    60,
+    80,
+    100
+  ],
+  "run_minutes_diagnostic": 120,
+  "shared_zero_pct_diagnostic": 95,
+  "missing_dates": [],
+  "selection_adopted": false,
+  "continuity_requirements": [
+    "valid time/date/station/speed",
+    "five-minute grid",
+    "exclude every duplicate copy",
+    "same route",
+    "do not bridge gaps or midnight"
+  ],
+  "coverage_count_denominator": "All saved ML rows attributed to a valid station ID",
+  "threshold_zero_warning": ">=0 includes zero coverage; baseline only, not observed usability.",
+  "error": "operation 'cumsum' not supported for dtype 'bool[pyarrow]'"
+}

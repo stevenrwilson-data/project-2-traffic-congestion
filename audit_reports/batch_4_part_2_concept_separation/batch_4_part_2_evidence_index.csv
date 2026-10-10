@@ -1,0 +1,5 @@
+evidence_type,source_file,role_in_decision
+Part 1 method summary,audit_reports/batch_4_breakdown_detection_v2/batch_4_method_summary.csv,"Shows the 1,457 vs 10 vs 7 event-count divergence."
+Part 1 pairwise agreement,audit_reports/batch_4_breakdown_detection_v2/batch_4_method_event_agreement.csv,Shows very low onset overlap among the three definitions.
+Part 1 threshold sensitivity,audit_reports/batch_4_breakdown_detection_v2/batch_4_threshold_event_sensitivity.csv,Shows sustained-congestion counts are broadly stable across 40/50/55 mph while event durations change.
+Part 1 combined event inventory,audit_reports/batch_4_breakdown_detection_v2/batch_4_combined_event_inventory.csv,Preserves every detected event under every original method.

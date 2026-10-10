@@ -1,0 +1,21 @@
+figure,section,recommendation,reason
+images/traffic_b3_threshold_sensitivity.png,Data validity,KEEP,Shows threshold choice does not materially damage corridor coverage.
+images/traffic_b3_weakest_station_threshold.png,Data validity,KEEP_SUPPORTING,"Shows weakest-link coverage, important for spatial analysis."
+images/traffic_b3_measurements_by_coverage.png,Audit,AUDIT_ONLY,Useful diagnostic but not a headline result.
+images/traffic_b3_exact_repeat_diagnostic.png,Audit,AUDIT_ONLY,Diagnostic only; exact repeats do not establish imputation.
+images/traffic_b3_lane_consistency.png,Audit,AUDIT_ONLY,Validates metadata-defined physical lanes rather than a substantive result.
+images/traffic_b4_example_speed_heatmap.png,Breakdown definitions,KEEP,Visually anchors the distinction between congestion state and abrupt onset.
+images/traffic_b4_part2_onset_timing_normalized.png,Breakdown definitions,KEEP_SUPPORTING,Compares timing without allowing the high-count state method to flatten rare onset methods.
+images/traffic_b4_part2_state_vs_onset_counts.png,Breakdown definitions,KEEP,Directly communicates that the operational definitions measure different phenomena.
+images/traffic_b5p1_event_centered_profiles.png,Precursors,KEEP_SUPPORTING,Shows the abrupt speed collapse and surrounding flow/occupancy behavior.
+images/traffic_b5p1_breakdown_speed_heatmap.png,Precursors,KEEP_SUPPORTING,Shows event-to-event heterogeneity in the ten abrupt onsets.
+images/traffic_b5p1_preconditions_vs_controls.png,Precursors,KEEP_SUPPORTING,Shows matched-control differences are modest rather than dramatic.
+images/traffic_b5p2b_classification_robustness.png,Propagation,KEEP,Shows which episode classifications survive alternative lag windows.
+images/traffic_b5p2b_station_participation_by_window.png,Propagation,KEEP_SUPPORTING,Makes sensitivity of episodes 3 and 5 easy to see.
+images/traffic_b5p3_duration_by_station.png,Duration,KEEP_SUPPORTING,Shows persistent duration differences across corridor stations.
+images/traffic_b5p3_recovery_survival.png,Recovery,KEEP,Shows the long tail of sustained congestion while respecting right censoring.
+images/traffic_b5p3_recovery_order.png,Recovery,KEEP_SUPPORTING,Shows recovery order differs across corridor episodes.
+images/traffic_b5p4_breakdown_probability_plm.png,Probability audit,EXCLUDE,Maximum probability is substantively tiny and the uncensored sample is too sparse for a useful portfolio chart.
+images/traffic_b6_leave_one_out_duration_robustness.png,Robustness,KEEP,Demonstrates that headline duration metrics are not dominated by one station or date.
+images/traffic_b6_duration_by_time_period.png,Duration,KEEP,Directly communicates the strong midday-duration result.
+images/traffic_b6_abrupt_onset_concentration.png,Limitations,KEEP_SUPPORTING,Makes the small and date-concentrated abrupt-onset sample transparent.

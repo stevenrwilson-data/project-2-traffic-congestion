@@ -1,0 +1,4 @@
+method_a,method_b,events_a,events_b,matched_events_within_10min_same_station,event_onset_jaccard_approx
+Threshold_50_15min,LA_20drop_below40,1457,10,8,0.0054832076764907475
+Threshold_50_15min,Caltrans_PeMS_spatial,1457,7,1,0.000683526999316473
+LA_20drop_below40,Caltrans_PeMS_spatial,10,7,0,0.0

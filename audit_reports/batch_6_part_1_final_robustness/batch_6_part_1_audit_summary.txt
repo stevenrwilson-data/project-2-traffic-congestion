@@ -1,0 +1,52 @@
+BATCH 6 — PART 1: FINAL ROBUSTNESS
+
+COVERAGE-THRESHOLD ROBUSTNESS
+ low_threshold  high_threshold  low_rows_retained  high_rows_retained  rows_identical  low_simultaneous_hours  high_simultaneous_hours  simultaneous_hours_identical
+            80             100             164657              164657            True             2540.083333              2540.083333                          True
+
+DURATION INFLUENCE SUMMARY
+                 metric  baseline  max_abs_leave_one_station_change_pct  max_abs_leave_one_date_change_pct  station_robust_under_rule  date_robust_under_rule
+overall_median_duration      60.0                                 8.333                              8.333                       True                    True
+   overall_p90_duration     355.0                                 4.225                              1.408                       True                    True
+     am_median_duration      50.0                                10.000                             10.000                       True                    True
+ midday_median_duration     170.0                                29.412                              2.941                      False                    True
+     pm_median_duration      45.0                                11.111                             11.111                       True                    True
+
+MIDDAY DURATION ROBUSTNESS
+ baseline_midday_minus_max_am_pm_minutes  minimum_gap_leave_one_station_out_minutes  minimum_gap_leave_one_date_out_minutes  midday_longer_after_every_station_exclusion  midday_longer_after_every_date_exclusion
+                                   120.0                                      105.0                                   120.0                                         True                                      True
+
+ABRUPT-ONSET CONCENTRATION BY DATE
+event_date  onset_events  stations  share_of_all_onsets_pct
+2026-03-02             4         4                     40.0
+2026-02-27             2         2                     20.0
+2026-02-01             1         1                     10.0
+2026-03-19             1         1                     10.0
+2026-04-30             1         1                     10.0
+2026-05-31             1         1                     10.0
+
+ABRUPT-ONSET CONCENTRATION BY STATION
+ station_id  onset_events  dates  share_of_all_onsets_pct
+     716152             3      3                     30.0
+     717185             3      3                     30.0
+     717190             2      2                     20.0
+     717195             1      1                     10.0
+     717198             1      1                     10.0
+
+PROPAGATION ROBUSTNESS
+ cluster_episode_count_stable_15_30_45  corridor_episode_count  propagation_classifications_stable  propagation_classifications_total  propagation_classification_stable_pct  meets_stability_target
+                                  True                       6                                   4                                  6                                 66.667                    True
+
+PLM USEFULNESS AUDIT
+ uncensored_breakdown_flows  censored_free_flow_intervals  maximum_plm_breakdown_probability  maximum_plm_breakdown_probability_pct  prebreakdown_flows_under_600_vphpl  portfolio_chart_recommended  portfolio_substantive_finding_recommended  audit_trail_retain
+                         10                         80113                           0.000188                                0.01883                                   4                        False                                      False                True
+
+INTERPRETATION FLAGS
+Top abrupt-onset day share: 40.0%.
+Onset-date concentration flag: True.
+Leave-one-out influence rule: 20% relative change.
+
+PORTFOLIO FIGURES
+images/traffic_b6_leave_one_out_duration_robustness.png
+images/traffic_b6_duration_by_time_period.png
+images/traffic_b6_abrupt_onset_concentration.png

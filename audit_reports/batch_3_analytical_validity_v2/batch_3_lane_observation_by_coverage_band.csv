@@ -1,0 +1,7 @@
+coverage_band,present_lane_slots,lane_observed_nonnull_pct,lane_observed_positive_pct
+0,46496,100.0,0.0
+>0-<40,2304,100.0,12.5
+40-<80,15864,100.0,35.68456883509833
+80-<100,0,,
+100,1317256,100.0,50.0
+invalid,0,,

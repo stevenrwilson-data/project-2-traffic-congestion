@@ -1,0 +1,21 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-09T20:03:00.073763+00:00",
+  "source_folder": "audit_reports/batch_4_breakdown_detection_v2",
+  "part1_folder": "audit_reports/batch_5_part_1_prebreakdown_conditions_v4",
+  "output_folder": "audit_reports/batch_5_part_2_propagation",
+  "primary_onset_method": "LA_20drop_below40",
+  "state_method": "Threshold_50_15min",
+  "cluster_gap_minutes": 30,
+  "cluster_sensitivity_minutes": [
+    15,
+    30,
+    45
+  ],
+  "corridor_episodes": 6,
+  "portfolio_figures": [
+    "images/traffic_b5p2_state_entry_lags.png",
+    "images/traffic_b5p2_propagation_lag_heatmap.png",
+    "images/traffic_b5p2_episode_speed_heatmaps.png"
+  ]
+}

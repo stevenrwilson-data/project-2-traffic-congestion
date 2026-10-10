@@ -1,0 +1,4 @@
+method,events,stations_with_events,days_with_events,median_duration_minutes,p90_duration_minutes,median_start_hour
+Threshold_50_15min,1457,5,103,60.0,355.0,13.166666666666666
+LA_20drop_below40,10,5,6,27.5,100.0,8.0
+Caltrans_PeMS_spatial,7,1,5,60.0,89.0,13.75

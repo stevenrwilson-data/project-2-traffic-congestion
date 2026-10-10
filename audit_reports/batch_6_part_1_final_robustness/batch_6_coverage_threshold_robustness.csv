@@ -1,0 +1,2 @@
+low_threshold,high_threshold,low_rows_retained,high_rows_retained,rows_identical,low_simultaneous_hours,high_simultaneous_hours,simultaneous_hours_identical
+80,100,164657,164657,True,2540.0833333333335,2540.0833333333335,True

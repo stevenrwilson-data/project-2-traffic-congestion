@@ -1,0 +1,2 @@
+events,stations,days,median_duration_minutes,q25_duration_minutes,q75_duration_minutes,p90_duration_minutes,right_censored_events
+1457,5,103,60.0,30.0,185.0,355.0,62

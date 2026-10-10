@@ -1,0 +1,25 @@
+{
+  "status": "complete",
+  "created_utc": "2026-10-10T00:16:50.537220+00:00",
+  "onset_method": "LA_20drop_below40",
+  "free_flow_min_speed_mph": 40,
+  "bootstrap_reps": 300,
+  "bootstrap_seed": 20261009,
+  "uncensored_breakdowns": 10,
+  "eligible_observations": 80123,
+  "sources": [
+    {
+      "label": "FHWA stochastic breakdown probability / product-limit method",
+      "url": "https://ops.fhwa.dot.gov/publications/fhwahop19029/appc.htm",
+      "basis": "FHWA describes freeway capacity as stochastic, classifies the interval immediately before breakdown as an uncensored capacity observation, treats free-flow intervals not followed by breakdown as censored observations, and estimates breakdown probability with the product-limit method."
+    },
+    {
+      "label": "FHWA decision-parameter chapter",
+      "url": "https://ops.fhwa.dot.gov/publications/fhwahop19029/ch4.htm",
+      "basis": "FHWA describes using current speed/flow conditions to estimate the probability of breakdown in the next interval and identifies the product-limit method as an established technique."
+    }
+  ],
+  "portfolio_figures": [
+    "images/traffic_b5p4_breakdown_probability_plm.png"
+  ]
+}

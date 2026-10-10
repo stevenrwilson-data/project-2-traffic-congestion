@@ -1,0 +1,34 @@
+{
+  "status": "incomplete",
+  "created_utc": "2026-10-09T08:14:38.631478+00:00",
+  "selected_corridor": "Fwy_10_E_physical_run_6",
+  "station_ids": [
+    716152,
+    717185,
+    717190,
+    717195,
+    717198
+  ],
+  "station_count": 5,
+  "start_date": "2026-02-01",
+  "end_date": "2026-05-31",
+  "thresholds": [
+    40,
+    60,
+    80,
+    100
+  ],
+  "selection_adopted": false,
+  "coverage_bands": [
+    "0",
+    ">0-<40",
+    "40-<80",
+    "80-<100",
+    "100",
+    "invalid"
+  ],
+  "lane_slot_rule": "A lane slot is analyzed only when at least one lane field in that slot is non-null. Completely empty padded lane slots are excluded.",
+  "repetition_rule": "Exact repeated values are compared only across consecutive five-minute records from the same station.",
+  "zero_vs_100_rule": "0%- and 100%-observed rows are compared within the same selected stations.",
+  "error": "cannot reindex on an axis with duplicate labels"
+}

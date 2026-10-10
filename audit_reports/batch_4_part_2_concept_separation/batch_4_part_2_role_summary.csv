@@ -1,0 +1,4 @@
+concept_role,method,events,stations_with_events,days_with_events,median_duration_minutes,p90_duration_minutes
+Breakdown onset — spatial,Caltrans_PeMS_spatial,7,1,5,60.0,89.0
+Breakdown onset — temporal,LA_20drop_below40,10,5,6,27.5,100.0
+Congested state,Threshold_50_15min,1457,5,103,60.0,355.0

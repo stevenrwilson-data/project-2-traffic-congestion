@@ -1,0 +1,6 @@
+finding_id,candidate_priority,finding,evidence,status
+B5-F1,top,Corridor-level abrupt-breakdown episode construction is robust to the temporal clustering threshold.,"15, 30, and 45 minute clustering all produced 6 corridor episodes.",supported
+B5-F2,high,"Most propagation classifications are stable, but some episodes depend on the allowed state-entry lag.","4/6 episode classifications were unchanged across 30, 60, and 120 minute propagation windows.",supported
+B5-F3,high,"Five minutes before abrupt collapse, event conditions differ only modestly from matched controls and do not show a simple monotonic precursor in every traffic variable.",Event/control medians: speed 58.10/61.95 mph; flow 419.0/443.5 veh/5min; occupancy 0.1087/0.1150.,suggestive
+B5-F4,high,Sustained congestion episodes often persist well beyond the initial abrupt onset.,Median duration 60.0 min; 90th percentile 355.0 min.,supported
+B5-F5,high,Breakdown probability can be estimated as a stochastic function of current per-lane flow rather than assuming one deterministic capacity threshold.,10 observed pre-breakdown flows were combined with 80113 censored free-flow intervals using the product-limit estimator.,supported_methodologically

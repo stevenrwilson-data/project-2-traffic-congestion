@@ -1,0 +1,55 @@
+BATCH 4 — TRAFFIC BREAKDOWN DEFINITION COMPARISON
+Primary corridor: Fwy_10_E_physical_run_6
+Stations: 5
+Analysis rows: 102,921
+Analysis window: 05:00-20:00
+Coverage requirement: 100% observed
+
+METHOD SUMMARY
+               method  events  stations_with_events  days_with_events  median_duration_minutes  p90_duration_minutes  median_start_hour
+   Threshold_50_15min    1457                     5               103                     60.0                 355.0             13.167
+    LA_20drop_below40      10                     5                 6                     27.5                 100.0              8.000
+Caltrans_PeMS_spatial       7                     1                 5                     60.0                  89.0             13.750
+
+FIXED-THRESHOLD SENSITIVITY
+ threshold_mph  events  days_with_events  median_duration_minutes
+            40    1378               100                     35.0
+            50    1457               103                     60.0
+            55    1371               112                     75.0
+
+PAIRWISE EVENT-ONSET AGREEMENT
+          method_a              method_b  events_a  events_b  matched_events_within_10min_same_station  event_onset_jaccard_approx
+Threshold_50_15min     LA_20drop_below40      1457        10                                         8                       0.005
+Threshold_50_15min Caltrans_PeMS_spatial      1457         7                                         1                       0.001
+ LA_20drop_below40 Caltrans_PeMS_spatial        10         7                                         0                       0.000
+
+METHODOLOGICAL POSITION
+No universal breakdown threshold is assumed.
+The three primary operational definitions are retained separately.
+The 40/50/55 mph sustained-threshold comparison quantifies threshold sensitivity.
+The LA rule tests a sharp temporal speed-collapse definition.
+The Caltrans rule tests a spatial bottleneck definition using adjacent stations.
+Batch 5 should adopt one primary definition only after reviewing agreement, event plausibility, and representative event plots.
+
+SOURCE NOTES
+FHWA D-PTSU speed-threshold discussion
+https://ops.fhwa.dot.gov/publications/fhwahop19029/ch4.htm
+FHWA notes that freeway breakdown thresholds vary by facility, typically around 40-55 mph, and uses 50 mph as an appropriate illustrative threshold after comparing 40, 50 and 55 mph.
+
+FHWA freeway breakdown persistence discussion
+https://ops.fhwa.dot.gov/publications/fhwahop08054/sect6.htm
+FHWA describes the HCM convention that oversaturated freeway conditions lasting at least 15 minutes constitute sustained breakdown.
+
+SHRP2 C05 / Los Angeles five-minute breakdown rule
+https://onlinepubs.trb.org/onlinepubs/shrp2/SHRP2prepubC05.pdf
+The report summarizes Los Angeles work using five-minute data with a minimum 20 mph speed differential and a speed threshold of 40 mph to identify breakdown.
+
+Caltrans PeMS bottleneck identification
+https://cagov.github.io/caldata-mdsa-caltrans-pems/data/bottlenecks/
+Current Caltrans PeMS implementation uses a 20 mph inter-station speed drop, downstream speed below 40 mph, station separation under 3 miles, and persistence in at least 5 of 7 consecutive five-minute observations.
+
+PORTFOLIO FIGURES
+images/traffic_b4_event_counts_by_method.png
+images/traffic_b4_threshold_sensitivity.png
+images/traffic_b4_onsets_by_hour.png
+images/traffic_b4_example_speed_heatmap.png
